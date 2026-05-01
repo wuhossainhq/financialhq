@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apex — Financial Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0A0E1A;--paper:#F5F3EE;--cream:#EDE9E1;
+  --her:#1A6B5A;--her-light:#E8F4F0;
+  --him:#1E3A6E;--him-light:#E8EEF8;
+  --gold:#8B5E00;--gold-light:#FBF3E3;
+  --red:#8B1A1A;--red-light:#FBECEC;
+  --green:#166534;--green-light:#DCFCE7;
+  --purple:#5B21B6;--purple-light:#EDE9FE;
+  --border:#D4CFC6;--muted:#6B6560;--muted2:#9B948C;
+  --serif:'Instrument Serif',serif;
+  --sans:'Instrument Sans',sans-serif;
+  --mono:'Roboto Mono',monospace;
+  --r:6px;--rl:10px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;min-height:100vh}
+.layout{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+aside{width:220px;flex-shrink:0;background:var(--ink);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;padding:28px 0;z-index:100;overflow-y:auto}
+.logo{padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:16px}
+.logo-word{font-family:var(--serif);font-size:22px;color:#F5F3EE;letter-spacing:-.01em}
+.logo-sub{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:.12em;text-transform:uppercase;font-family:var(--mono)}
+.nav-section{font-size:9px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:.14em;padding:0 20px;margin:12px 0 4px;font-family:var(--mono)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 20px;font-size:12px;color:rgba(255,255,255,0.45);cursor:pointer;transition:all .15s;border-left:2px solid transparent;font-weight:500}
+.nav-item:hover{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.04)}
+.nav-item.active{color:#F5F3EE;border-left-color:var(--her);background:rgba(26,107,90,0.12)}
+.nav-icon{font-size:13px;width:16px;text-align:center}
+.nav-spacer{flex:1}
+.nav-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08)}
+.nf-label{font-size:9px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono)}
+.nf-date{font-size:11px;color:rgba(255,255,255,0.45);font-family:var(--mono);margin-top:3px}
+
+/* MAIN */
+.main{margin-left:220px;flex:1}
+.page{display:none;padding:40px 44px;max-width:1120px}
+.page.active{display:block}
+
+/* PAGE HEADER */
+.ph-eye{font-size:10px;font-family:var(--mono);color:var(--muted2);text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px}
+.ph-title{font-family:var(--serif);font-size:34px;letter-spacing:-.02em;line-height:1.1;margin-bottom:6px}
+.ph-title em{font-style:italic;color:var(--her)}
+.ph-sub{font-size:13px;color:var(--muted);max-width:540px;line-height:1.6;margin-bottom:32px}
+
+/* CARDS */
+.card{background:white;border:1px solid var(--border);border-radius:var(--rl);padding:24px;margin-bottom:16px}
+.card-title{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* STAT GRIDS */
+.sg{display:grid;gap:12px;margin-bottom:20px}
+.sg2{grid-template-columns:1fr 1fr}
+.sg3{grid-template-columns:1fr 1fr 1fr}
+.sg4{grid-template-columns:1fr 1fr 1fr 1fr}
+.sg5{grid-template-columns:1fr 1fr 1fr 1fr 1fr}
+.stat{background:white;border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px;position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ac,var(--her))}
+.sl{font-size:10px;font-family:var(--mono);color:var(--muted2);text-transform:uppercase;letter-spacing:.09em;margin-bottom:7px}
+.sv{font-family:var(--serif);font-size:26px;letter-spacing:-.02em;line-height:1}
+.ss{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.c-her{color:var(--her)}.c-him{color:var(--him)}.c-gold{color:var(--gold)}.c-red{color:var(--red)}.c-green{color:var(--green)}.c-purple{color:var(--purple)}
+
+/* SECTION TITLE */
+.st{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.st::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* INPUTS */
+.field{display:flex;flex-direction:column;gap:4px}
+.fl{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.09em}
+.fi{background:white;border:1px solid var(--border);border-radius:var(--r);color:var(--ink);font-size:14px;font-weight:600;font-family:var(--mono);padding:8px 11px;outline:none;width:100%;transition:border-color .15s;-moz-appearance:textfield}
+.fi::-webkit-inner-spin-button,.fi::-webkit-outer-spin-button{-webkit-appearance:none}
+.fi:focus{border-color:var(--her)}
+.fn{font-size:10px;color:var(--muted2)}
+.fg{display:grid;gap:12px;margin-bottom:20px}
+.fg2{grid-template-columns:1fr 1fr}.fg3{grid-template-columns:1fr 1fr 1fr}.fg4{grid-template-columns:1fr 1fr 1fr 1fr}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 12px;font-size:9px;font-family:var(--mono);color:var(--muted2);text-transform:uppercase;letter-spacing:.09em;border-bottom:2px solid var(--border);font-weight:500}
+th:not(:first-child){text-align:right}
+td{padding:10px 12px;border-bottom:1px solid var(--cream);vertical-align:middle}
+td:not(:first-child){text-align:right;font-family:var(--mono);font-size:12px}
+tr:hover td{background:var(--cream)}
+.tr-section td{background:var(--cream);font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:5px 12px;font-weight:500}
+.tr-total td{font-weight:700;border-top:2px solid var(--border);background:white}
+.tr-good td{background:var(--green-light)}
+.tr-warn td{background:var(--red-light)}
+.badge{display:inline-block;font-size:9px;font-family:var(--mono);font-weight:600;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:3px}
+.b1{background:#DCFCE7;color:var(--green)}.b2{background:var(--him-light);color:var(--him)}
+.b3{background:var(--gold-light);color:var(--gold)}.b4{background:var(--cream);color:var(--muted)}
+
+/* NW HERO */
+.nw-hero{background:var(--ink);border-radius:var(--rl);padding:28px 32px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;position:relative;overflow:hidden}
+.nw-hero::before{content:'';position:absolute;top:-80px;right:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(26,107,90,0.12),transparent 60%);pointer-events:none}
+.nhl{font-size:10px;font-family:var(--mono);color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.nhv{font-family:var(--serif);font-size:clamp(32px,4vw,52px);color:#F5F3EE;letter-spacing:-.03em;line-height:1}
+.nhv.neg{color:#FCA5A5}
+.nhs{font-size:11px;color:rgba(255,255,255,0.35);margin-top:6px;font-family:var(--mono)}
+.nhr{display:flex;flex-direction:column;gap:0}
+.nhrr{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.07);font-size:12px}
+.nhrr:last-child{border-bottom:none}
+.nhrl{color:rgba(255,255,255,0.4)}
+.nhrv{font-family:var(--mono);font-weight:500}
+.nhr-a{color:#86EFAC}.nhr-d{color:#FCA5A5}
+
+/* SLIDERS */
+input[type=range]{width:100%;height:3px;background:var(--border);outline:none;border-radius:2px;cursor:pointer;-webkit-appearance:none;margin:6px 0 4px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--her);border-radius:50%;cursor:pointer;box-shadow:0 0 0 3px white,0 0 0 4px var(--her)}
+.slr{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px}
+.slv{font-family:var(--mono);font-weight:600}
+.sle{display:flex;justify-content:space-between;font-size:10px;color:var(--muted2);font-family:var(--mono)}
+
+/* BUDGET PANELS */
+.bp-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+.bp{background:white;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.bp-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:baseline}
+.bp-ht{font-size:13px;font-weight:600}
+.bp-htot{font-family:var(--mono);font-size:12px;font-weight:600}
+.bp-grp{padding:6px 18px 2px;background:var(--cream);font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.bp-row{display:flex;justify-content:space-between;align-items:center;padding:9px 18px;border-bottom:1px solid var(--cream)}
+.bp-row:last-child{border-bottom:none}
+.bp-left{display:flex;align-items:center;gap:8px}
+.bp-icon{font-size:14px;width:20px;text-align:center}
+.bp-name{font-size:12px;font-weight:500}
+.bp-note{font-size:10px;color:var(--muted2);margin-top:1px}
+.bp-right{text-align:right}
+.bpi{width:72px;text-align:right;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--ink);font-size:12px;font-weight:600;font-family:var(--mono);padding:2px 3px;outline:none;-moz-appearance:textfield}
+.bpi::-webkit-inner-spin-button,.bpi::-webkit-outer-spin-button{-webkit-appearance:none}
+.bpi:focus{border-bottom-color:var(--her)}
+.bp-ann{font-size:9px;color:var(--muted2);font-family:var(--mono)}
+
+/* DEBT PANELS */
+.dp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.dp{background:white;border:1px solid var(--border);border-radius:var(--rl);padding:22px}
+.dp-label{font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;font-weight:600}
+.dp-bal{font-family:var(--serif);font-size:28px;letter-spacing:-.02em;margin-bottom:2px}
+.dp-int{font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:14px}
+.dp-bar{height:5px;background:var(--cream);border-radius:3px;overflow:hidden;margin-bottom:16px}
+.dp-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--her),#3DA882);transition:width .4s}
+.dp-rg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.dr{background:var(--cream);border-radius:var(--r);padding:9px 11px}
+.drl{font-size:9px;font-family:var(--mono);color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+.drv{font-size:13px;font-weight:600;font-family:var(--mono)}
+
+/* CHART */
+.ch-wrap{background:white;border:1px solid var(--border);border-radius:var(--rl);padding:22px;margin-bottom:16px}
+.ch-canvas{position:relative;height:240px}
+
+/* NOMAD HERO */
+.nh{background:var(--him);border-radius:var(--rl);padding:24px 28px;margin-bottom:16px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+.nh-title{font-family:var(--serif);font-size:24px;color:white;letter-spacing:-.01em;margin-bottom:4px}
+.nh-desc{font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6}
+.nh-days{font-family:var(--serif);font-size:52px;color:white;line-height:1;text-align:right;letter-spacing:-.03em}
+.nh-dlbl{font-size:10px;font-family:var(--mono);color:rgba(255,255,255,0.35);text-align:right;text-transform:uppercase;letter-spacing:.1em}
+
+/* TIMELINE */
+.tl-item{display:grid;grid-template-columns:110px 1fr;gap:0;margin-bottom:0;position:relative}
+.tl-item::before{content:'';position:absolute;left:110px;top:0;bottom:0;width:1px;background:var(--border)}
+.tl-date{padding:18px 16px 18px 0;text-align:right;font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.4}
+.tl-content{padding:14px 0 14px 22px;position:relative}
+.tl-content::before{content:'';position:absolute;left:-5px;top:20px;width:9px;height:9px;border-radius:50%;border:2px solid white;background:var(--dc,var(--border));box-shadow:0 0 0 1px var(--dc,var(--border))}
+.tl-phase{font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);margin-bottom:3px}
+.tl-title{font-size:14px;font-weight:600;margin-bottom:3px}
+.tl-desc{font-size:12px;color:var(--muted);line-height:1.6}
+.tl-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.tl-tag{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:3px;font-weight:500}
+.tt-her{background:var(--her-light);color:var(--her)}.tt-him{background:var(--him-light);color:var(--him)}
+.tt-gold{background:var(--gold-light);color:var(--gold)}.tt-green{background:var(--green-light);color:var(--green)}
+
+/* SUBSCRIPTION TRACKER */
+.sub-row{display:grid;grid-template-columns:28px 1fr 80px 80px 80px 36px;gap:8px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--cream)}
+.sub-row:last-child{border-bottom:none}
+.sub-icon{font-size:16px;text-align:center}
+.sub-name{font-size:13px;font-weight:500}
+.sub-note{font-size:10px;color:var(--muted2);margin-top:1px}
+.sub-inp{width:80px;text-align:right;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--ink);font-size:12px;font-weight:600;font-family:var(--mono);padding:2px 3px;outline:none;-moz-appearance:textfield}
+.sub-inp::-webkit-inner-spin-button,.sub-inp::-webkit-outer-spin-button{-webkit-appearance:none}
+.sub-inp:focus{border-bottom-color:var(--her)}
+.sub-del{background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted2);transition:color .15s;padding:2px}
+.sub-del:hover{color:var(--red)}
+.sub-who{font-size:9px;font-family:var(--mono);font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border-radius:3px}
+.sw-her{background:var(--her-light);color:var(--her)}.sw-him{background:var(--him-light);color:var(--him)}.sw-joint{background:var(--gold-light);color:var(--gold)}
+
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--cream);border-radius:var(--r);margin-bottom:16px;font-size:13px}
+.toggle-sw{width:38px;height:22px;background:var(--border);border-radius:11px;cursor:pointer;border:none;position:relative;transition:background .2s;flex-shrink:0}
+.toggle-sw.on{background:var(--him)}
+.toggle-sw::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:white;border-radius:50%;transition:transform .2s}
+.toggle-sw.on::after{transform:translateX(16px)}
+
+/* SAVINGS TIMELINE */
+.bucket-timeline{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.bt-card{background:white;border:1px solid var(--border);border-radius:var(--rl);padding:16px}
+.bt-name{font-size:13px;font-weight:600;margin-bottom:8px}
+.bt-bar{height:6px;background:var(--cream);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.bt-fill{height:100%;border-radius:3px;transition:width .4s}
+.bt-meta{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);margin-bottom:6px}
+.bt-eta{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.bt-inp-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.bt-fi{width:100%;text-align:right;background:var(--cream);border:1px solid var(--border);border-radius:var(--r);color:var(--ink);font-size:11px;font-weight:600;font-family:var(--mono);padding:4px 7px;outline:none;-moz-appearance:textfield}
+.bt-fi::-webkit-inner-spin-button,.bt-fi::-webkit-outer-spin-button{-webkit-appearance:none}
+.bt-fi:focus{border-color:var(--her)}
+.bt-fl{font-size:9px;font-family:var(--mono);color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+
+/* BIWEEKLY LOG */
+.log-row{display:grid;grid-template-columns:120px 1fr 1fr 1fr 1fr 80px;gap:8px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--cream)}
+.log-row:last-child{border-bottom:none}
+.log-row.header{background:var(--cream);font-size:9px;font-family:var(--mono);color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;padding:6px 14px}
+.log-inp{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--ink);font-size:12px;font-weight:600;font-family:var(--mono);padding:2px 3px;outline:none;-moz-appearance:textfield}
+.log-inp::-webkit-inner-spin-button,.log-inp::-webkit-outer-spin-button{-webkit-appearance:none}
+.log-inp:focus{border-bottom-color:var(--her)}
+.log-date-inp{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--ink);font-size:11px;font-family:var(--mono);padding:2px 3px;outline:none}
+.log-date-inp:focus{border-bottom-color:var(--her)}
+.log-diff{font-family:var(--mono);font-size:11px;font-weight:600}
+.log-add-btn{background:var(--her);color:white;border:none;border-radius:var(--r);padding:8px 16px;font-size:12px;font-family:var(--sans);font-weight:600;cursor:pointer;margin-top:12px;transition:opacity .15s}
+.log-add-btn:hover{opacity:.85}
+
+/* INCOME SIMULATOR */
+.sim-result{background:var(--green-light);border:1px solid rgba(22,101,52,0.2);border-radius:var(--rl);padding:18px 22px;margin-top:16px}
+.sim-r-title{font-size:13px;font-weight:600;color:var(--green);margin-bottom:10px}
+.sim-r-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(22,101,52,0.1);font-size:12px}
+.sim-r-row:last-child{border-bottom:none}
+.sim-r-label{color:var(--muted)}
+.sim-r-val{font-family:var(--mono);font-weight:600;color:var(--green)}
+
+/* EQUITY TRACKER */
+.eq-progress{height:16px;background:var(--cream);border-radius:8px;overflow:hidden;margin:12px 0}
+.eq-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--her),#3DA882);transition:width .5s}
+
+/* MISC */
+.info-box{background:var(--her-light);border:1px solid rgba(26,107,90,0.2);border-radius:var(--r);padding:12px 15px;font-size:12px;color:var(--her);line-height:1.6;margin-bottom:16px}
+.warn-box{background:var(--gold-light);border:1px solid rgba(139,94,0,0.2);border-radius:var(--r);padding:12px 15px;font-size:12px;color:var(--gold);line-height:1.6;margin-bottom:16px}
+.alert-box{background:var(--red-light);border:1px solid rgba(139,26,26,0.2);border-radius:var(--r);padding:12px 15px;font-size:12px;color:var(--red);line-height:1.6;margin-bottom:16px}
+@media(max-width:900px){aside{display:none}.main{margin-left:0}.page{padding:20px 16px}.sg4,.sg5{grid-template-columns:1fr 1fr}.bp-grid,.dp-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside>
+  <div class="logo"><div class="logo-word">Apex</div><div class="logo-sub">Financial Hub</div></div>
+  <div class="nav-section">Overview</div>
+  <div class="nav-item active" onclick="go('home',this)"><span class="nav-icon">⌂</span>Command Center</div>
+  <div class="nav-section">Money</div>
+  <div class="nav-item" onclick="go('alloc',this)"><span class="nav-icon">◈</span>Income Allocation</div>
+  <div class="nav-item" onclick="go('budget',this)"><span class="nav-icon">◉</span>Budget Breakdown</div>
+  <div class="nav-item" onclick="go('subs',this)"><span class="nav-icon">📱</span>Subscriptions</div>
+  <div class="nav-item" onclick="go('nw',this)"><span class="nav-icon">◎</span>Net Worth</div>
+  <div class="nav-section">Planning</div>
+  <div class="nav-item" onclick="go('debt',this)"><span class="nav-icon">↘</span>Loan Payoff</div>
+  <div class="nav-item" onclick="go('log',this)"><span class="nav-icon">📋</span>Biweekly Log</div>
+  <div class="nav-item" onclick="go('savings',this)"><span class="nav-icon">🎯</span>Savings Timeline</div>
+  <div class="nav-item" onclick="go('equity',this)"><span class="nav-icon">⚖</span>Equity Balance</div>
+  <div class="nav-item" onclick="go('income-sim',this)"><span class="nav-icon">📈</span>Income Simulator</div>
+  <div class="nav-item" onclick="go('nomad',this)"><span class="nav-icon">✈</span>Nomad Year</div>
+  <div class="nav-item" onclick="go('timeline',this)"><span class="nav-icon">→</span>Life Timeline</div>
+  <div class="nav-spacer"></div>
+  <div class="nav-footer"><div class="nf-label">Updated</div><div class="nf-date">May 1, 2026</div></div>
+</aside>
+
+<div class="main">
+
+<!-- ═══ HOME ═══ -->
+<div id="page-home" class="page active">
+  <div class="ph-eye">Financial Command Center</div>
+  <div class="ph-title">Janette <em>&</em> Partner</div>
+  <div class="ph-sub">Edit any number on any page — everything recalculates live.</div>
+
+  <div class="nw-hero">
+    <div><div class="nhl">Combined Net Worth</div><div class="nhv" id="h-nw">—</div><div class="nhs" id="h-nw-sub">—</div></div>
+    <div class="nhr">
+      <div class="nhrr"><span class="nhrl">Roth IRA</span><span class="nhrv nhr-a" id="h-roth">—</span></div>
+      <div class="nhrr"><span class="nhrl">HYSA + savings</span><span class="nhrv nhr-a" id="h-hysa">—</span></div>
+      <div class="nhrr"><span class="nhrl">Cash</span><span class="nhrv nhr-a" id="h-cash">—</span></div>
+      <div class="nhrr"><span class="nhrl">Janette loan</span><span class="nhrv nhr-d" id="h-hloan">—</span></div>
+      <div class="nhrr" style="border:none"><span class="nhrl">Partner loan</span><span class="nhrv nhr-d" id="h-ploan">—</span></div>
+    </div>
+    <div class="nhr">
+      <div class="nhrr"><span class="nhrl">Combined income</span><span class="nhrv" style="color:#86EFAC" id="h-income">—</span></div>
+      <div class="nhrr"><span class="nhrl">Monthly to debt</span><span class="nhrv" style="color:#FCD34D" id="h-to-debt">—</span></div>
+      <div class="nhrr"><span class="nhrl">Total interest/mo</span><span class="nhrv nhr-d" id="h-int-mo">—</span></div>
+      <div class="nhrr"><span class="nhrl">CC debt</span><span class="nhrv nhr-a">$0 cleared ✓</span></div>
+      <div class="nhrr" style="border:none"><span class="nhrl">Est. debt-free</span><span class="nhrv" style="color:#FCD34D" id="h-df">—</span></div>
+    </div>
+  </div>
+
+  <div class="st">Savings Buckets</div>
+  <div id="h-buckets" class="sg" style="grid-template-columns:repeat(3,1fr)"></div>
+
+  <div class="st">Milestones</div>
+  <div id="h-milestones" class="sg sg4"></div>
+</div>
+
+<!-- ═══ ALLOCATION ═══ -->
+<div id="page-alloc" class="page">
+  <div class="ph-eye">Income Allocation</div>
+  <div class="ph-title">Where Every Dollar <em>Goes</em></div>
+  <div class="ph-sub">Priority-ranked. Highest impact first. Edit incomes to update all allocations.</div>
+  <div class="fg fg2">
+    <div class="field"><div class="fl">Janette take-home / mo</div><input class="fi" type="number" id="a-her" value="4510" oninput="rAlloc()"><div class="fn">After tax, no 401k at startup</div></div>
+    <div class="field"><div class="fl">Partner take-home / mo</div><input class="fi" type="number" id="a-him" value="5521" oninput="rAlloc()"><div class="fn">After tax + 401k maxed</div></div>
+  </div>
+  <div class="sg sg3" style="margin-bottom:20px">
+    <div class="stat" style="--ac:var(--her)"><div class="sl">Combined</div><div class="sv c-her" id="a-comb">—</div><div class="ss" id="a-comb-yr">—</div></div>
+    <div class="stat" style="--ac:var(--gold)"><div class="sl">Allocated</div><div class="sv c-gold" id="a-alloc">—</div><div class="ss" id="a-alloc-p">—</div></div>
+    <div class="stat" style="--ac:var(--green)"><div class="sl">Surplus</div><div class="sv" id="a-surp">—</div><div class="ss" id="a-surp-n">—</div></div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table id="alloc-tbl"><thead><tr><th>Priority</th><th>Allocation</th><th>Category</th><th>Janette</th><th>Partner</th><th>Combined</th><th>Annual</th><th>% income</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<!-- ═══ BUDGET ═══ -->
+<div id="page-budget" class="page">
+  <div class="ph-eye">Budget Breakdown</div>
+  <div class="ph-title">Personal <em>&</em> Joint</div>
+  <div class="ph-sub">Every dollar categorized. Edit any amount — annual totals update live.</div>
+
+  <div class="toggle-row">
+    <button class="toggle-sw" id="nomad-toggle" onclick="toggleNomadMode()"></button>
+    <span id="nomad-mode-label"><strong>Home mode</strong> — his mom cooks, no rent. Switch to nomad mode to see abroad budget.</span>
+  </div>
+
+  <div class="sg sg3" style="margin-bottom:16px">
+    <div class="stat" style="--ac:var(--her)"><div class="sl">Janette personal</div><div class="sv c-her" id="b-her-tot">—</div><div class="ss" id="b-her-yr">—/yr</div></div>
+    <div class="stat" style="--ac:var(--him)"><div class="sl">Partner personal</div><div class="sv c-him" id="b-him-tot">—</div><div class="ss" id="b-him-yr">—/yr</div></div>
+    <div class="stat" style="--ac:var(--gold)"><div class="sl">Joint shared</div><div class="sv c-gold" id="b-jnt-tot">—</div><div class="ss" id="b-jnt-yr">—/yr</div></div>
+  </div>
+
+  <div class="bp-grid" id="budget-panels"></div>
+</div>
+
+<!-- ═══ SUBSCRIPTIONS ═══ -->
+<div id="page-subs" class="page">
+  <div class="ph-eye">Subscription Tracker</div>
+  <div class="ph-title">Every Recurring <em>Charge</em></div>
+  <div class="ph-sub">List every subscription. Update partner's $200/mo estimate once confirmed. Nothing should be silent.</div>
+
+  <div class="sg sg3" style="margin-bottom:16px">
+    <div class="stat" style="--ac:var(--her)"><div class="sl">Janette subs</div><div class="sv c-her" id="s-her-tot">—</div><div class="ss" id="s-her-yr">—/yr</div></div>
+    <div class="stat" style="--ac:var(--him)"><div class="sl">Partner subs</div><div class="sv c-him" id="s-him-tot">—</div><div class="ss" id="s-him-yr">—/yr</div></div>
+    <div class="stat" style="--ac:var(--gold)"><div class="sl">Joint subs</div><div class="sv c-gold" id="s-jnt-tot">—</div><div class="ss" id="s-jnt-yr">—/yr</div></div>
+  </div>
+
+  <div class="warn-box" id="sub-warn"></div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="display:grid;grid-template-columns:28px 1fr 80px 80px 80px 36px;gap:8px;padding:8px 14px;background:var(--cream);font-size:9px;font-family:var(--mono);color:var(--muted2);text-transform:uppercase;letter-spacing:.08em">
+      <span></span><span>Subscription</span><span style="text-align:right">Monthly</span><span style="text-align:right">Annual</span><span style="text-align:right">Who</span><span></span>
+    </div>
+    <div id="sub-list"></div>
+  </div>
+  <button class="log-add-btn" style="margin-top:12px" onclick="addSub()">+ Add subscription</button>
+</div>
+
+<!-- ═══ NET WORTH ═══ -->
+<div id="page-nw" class="page">
+  <div class="ph-eye">Net Worth Calculator</div>
+  <div class="ph-title">Assets <em>minus</em> Liabilities</div>
+  <div class="ph-sub">Update monthly. Roth balance from Vanguard. Loan balance from servicer.</div>
+
+  <div class="nw-hero">
+    <div><div class="nhl">Net Worth</div><div class="nhv" id="nw-val">—</div><div class="nhs" id="nw-sub">—</div></div>
+    <div class="nhr"><div class="nhrr"><span class="nhrl">Total assets</span><span class="nhrv nhr-a" id="nw-assets">—</span></div><div class="nhrr" style="border:none"><span class="nhrl">Total liabilities</span><span class="nhrv nhr-d" id="nw-liab">—</span></div></div>
+    <div class="nhr"><div class="nhrr"><span class="nhrl">Crosses zero</span><span class="nhrv" style="color:#86EFAC" id="nw-zero">—</span></div><div class="nhrr" style="border:none"><span class="nhrl">At 5 years</span><span class="nhrv" style="color:#86EFAC" id="nw-5yr">—</span></div></div>
+  </div>
+
+  <div class="sg sg2">
+    <div class="card">
+      <div class="card-title">Assets</div>
+      <div id="nw-assets-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Liabilities</div>
+      <div id="nw-liab-list"></div>
+    </div>
+  </div>
+
+  <div class="ch-wrap"><div class="card-title">Net worth projection — 5 years</div><div class="ch-canvas"><canvas id="nw-chart"></canvas></div></div>
+</div>
+
+<!-- ═══ DEBT ═══ -->
+<div id="page-debt" class="page">
+  <div class="ph-eye">Loan Payoff Calculator</div>
+  <div class="ph-title">Kill the Debt <em>Fast</em></div>
+  <div class="ph-sub">Drag sliders or type a payment — see exactly how extra payments change your payoff date and total interest.</div>
+  <div class="info-box" id="d-interest-info"></div>
+  <div class="dp-grid">
+    <div class="dp">
+      <div class="dp-label c-her">Janette — Student Loan</div>
+      <div class="dp-bal c-red" id="d-her-bal-d">$21,000</div>
+      <div class="dp-int" id="d-her-int-d">9% · $158/mo interest</div>
+      <div class="fg fg2" style="margin-bottom:12px">
+        <div class="field"><div class="fl">Balance</div><input class="fi" type="number" id="d-her-bal" value="21000" oninput="rDebt()" style="font-size:13px;padding:7px 10px"></div>
+        <div></div>
+      </div>
+      <div class="dp-bar"><div class="dp-fill" id="d-her-prog" style="width:0%"></div></div>
+      <div class="slr"><span class="slv" style="font-size:12px;color:var(--muted)">Monthly payment</span><span class="slv c-her" id="d-her-pmt-l">$2,427</span></div>
+      <input type="range" id="d-her-sl" min="160" max="4000" step="25" value="2427" oninput="rDebt()" style="accent-color:var(--her)">
+      <div class="sle"><span>$160 min</span><span>$4,000</span></div>
+      <div class="dp-rg">
+        <div class="dr"><div class="drl">Payoff</div><div class="drv c-her" id="d-her-po">—</div></div>
+        <div class="dr"><div class="drl">Months</div><div class="drv" id="d-her-mo">—</div></div>
+        <div class="dr"><div class="drl">Total interest</div><div class="drv c-red" id="d-her-ti">—</div></div>
+        <div class="dr"><div class="drl">% paid off</div><div class="drv" id="d-her-pct">—</div></div>
+      </div>
+    </div>
+    <div class="dp">
+      <div class="dp-label c-him">Partner — Student Loan</div>
+      <div class="dp-bal c-red" id="d-him-bal-d">$130,000</div>
+      <div class="dp-int" id="d-him-int-d">9% · $975/mo interest</div>
+      <div class="fg fg2" style="margin-bottom:12px">
+        <div class="field"><div class="fl">Balance</div><input class="fi" type="number" id="d-him-bal" value="130000" oninput="rDebt()" style="font-size:13px;padding:7px 10px"></div>
+        <div></div>
+      </div>
+      <div class="dp-bar"><div class="dp-fill" id="d-him-prog" style="width:0%" style="background:linear-gradient(90deg,var(--him),#4A6FAD)"></div></div>
+      <div class="slr"><span class="slv" style="font-size:12px;color:var(--muted)">Monthly payment</span><span class="slv c-him" id="d-him-pmt-l">$2,500</span></div>
+      <input type="range" id="d-him-sl" min="975" max="6000" step="25" value="2500" oninput="rDebt()" style="accent-color:var(--him)">
+      <div class="sle"><span>$975 min</span><span>$6,000</span></div>
+      <div class="dp-rg">
+        <div class="dr"><div class="drl">Payoff</div><div class="drv c-him" id="d-him-po">—</div></div>
+        <div class="dr"><div class="drl">Months</div><div class="drv" id="d-him-mo">—</div></div>
+        <div class="dr"><div class="drl">Total interest</div><div class="drv c-red" id="d-him-ti">—</div></div>
+        <div class="dr"><div class="drl">% paid off</div><div class="drv" id="d-him-pct">—</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="ch-wrap"><div class="card-title">Loan balance over time</div><div class="ch-canvas"><canvas id="debt-chart"></canvas></div></div>
+  <div class="st" style="margin-top:20px">Amortization — Janette</div>
+  <div style="overflow-x:auto;margin-bottom:20px"><table id="amort-her"></table></div>
+  <div class="st">Amortization — Partner</div>
+  <div style="overflow-x:auto"><table id="amort-him"></table></div>
+</div>
+
+<!-- ═══ BIWEEKLY LOG ═══ -->
+<div id="page-log" class="page">
+  <div class="ph-eye">Biweekly Check-in Log</div>
+  <div class="ph-title">Actual vs <em>Projected</em></div>
+  <div class="ph-sub">Log your real loan balances every 2 weeks. See whether you're ahead or behind the projection.</div>
+  <div class="info-box">Update this every payday. Actual balance comes from your loan servicer app. The dashboard calculates whether you're ahead or behind your projected payoff pace.</div>
+
+  <div class="sg sg4" style="margin-bottom:16px">
+    <div class="stat" style="--ac:var(--her)"><div class="sl">Janette — current</div><div class="sv c-her" id="log-her-curr">$21,000</div><div class="ss">latest logged balance</div></div>
+    <div class="stat" style="--ac:var(--him)"><div class="sl">Partner — current</div><div class="sv c-him" id="log-him-curr">$130,000</div><div class="ss">latest logged balance</div></div>
+    <div class="stat" style="--ac:var(--green)"><div class="sl">Janette vs projection</div><div class="sv" id="log-her-vs">—</div><div class="ss" id="log-her-vs-s">—</div></div>
+    <div class="stat" style="--ac:var(--green)"><div class="sl">Partner vs projection</div><div class="sv" id="log-him-vs">—</div><div class="ss" id="log-him-vs-s">—</div></div>
+  </div>
+
+  <div class="ch-wrap" style="margin-bottom:16px"><div class="card-title">Actual payoff vs projected</div><div class="ch-canvas"><canvas id="log-chart"></canvas></div></div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="log-row header"><span>Date</span><span>Janette balance</span><span>Partner balance</span><span>Janette Δ</span><span>Partner Δ</span><span>Del</span></div>
+    <div id="log-rows"></div>
+  </div>
+  <button class="log-add-btn" onclick="addLogRow()">+ Add entry</button>
+</div>
+
+<!-- ═══ SAVINGS TIMELINE ═══ -->
+<div id="page-savings" class="page">
+  <div class="ph-eye">Savings Timeline</div>
+  <div class="ph-title">When Each Bucket <em>Fills</em></div>
+  <div class="ph-sub">Edit saved amount, monthly contribution, and target. Projected completion date updates live.</div>
+  <div class="bucket-timeline" id="savings-buckets"></div>
+</div>
+
+<!-- ═══ EQUITY TRACKER ═══ -->
+<div id="page-equity" class="page">
+  <div class="ph-eye">Equity Balance Tracker</div>
+  <div class="ph-title">The $44,920 <em>Acknowledged</em></div>
+  <div class="ph-sub">Janette contributed $44,920 over 21 months toward partner's CC debt. This tracker shows how the 65/35 shared expense split rebalances it over time.</div>
+
+  <div class="sg sg3" style="margin-bottom:16px">
+    <div class="stat" style="--ac:var(--gold)"><div class="sl">Total contribution</div><div class="sv c-gold">$44,920</div><div class="ss">21 months · May 2024–Apr 2026</div></div>
+    <div class="stat" style="--ac:var(--her)"><div class="sl">Real value (incl. interest saved)</div><div class="sv c-her">~$54,000</div><div class="ss">27% interest on ~$45K avoided</div></div>
+    <div class="stat" style="--ac:var(--green)"><div class="sl">Rebalanced so far</div><div class="sv c-green" id="eq-rebal">$0</div><div class="ss">Via 65/35 split differential</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Rebalancing inputs</div>
+    <div class="fg fg3">
+      <div class="field"><div class="fl">Monthly shared expenses</div><input class="fi" type="number" id="eq-shared" value="557" oninput="rEquity()"><div class="fn">Total joint expenses per month</div></div>
+      <div class="field"><div class="fl">Partner's % (equity-adjusted)</div><input class="fi" type="number" id="eq-his-pct" value="65" oninput="rEquity()"><div class="fn">Standard would be 55%</div></div>
+      <div class="field"><div class="fl">Months since partner started job</div><input class="fi" type="number" id="eq-months" value="0" oninput="rEquity()"><div class="fn">Update each month</div></div>
+    </div>
+    <div class="eq-progress"><div class="eq-fill" id="eq-bar" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);margin-bottom:16px">
+      <span class="c-her" id="eq-so-far">$0 rebalanced</span>
+      <span style="color:var(--muted)">$44,920 target</span>
+    </div>
+    <div id="eq-result" class="info-box"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Three rebalancing paths</div>
+    <table>
+      <thead><tr><th>Approach</th><th>Mechanism</th><th>Monthly credit</th><th>Years to balance</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td><strong>A — Cost absorption (recommended)</strong></td><td>65/35 split on all shared expenses</td><td style="text-align:right;font-family:var(--mono)" id="eq-monthly-credit">—</td><td style="text-align:right;font-family:var(--mono)" id="eq-years-a">—</td><td><span class="badge b1">Best fit</span></td></tr>
+        <tr><td><strong>B — Structured repayment</strong></td><td>$500–750/mo explicit payment to Janette</td><td style="text-align:right;font-family:var(--mono)">$500–750</td><td style="text-align:right;font-family:var(--mono)">5–7 yrs</td><td><span class="badge b4">Formal</span></td></tr>
+        <tr><td><strong>C — Goal funding</strong></td><td>Partner funds baby/move-out/emergency disproportionately</td><td style="text-align:right;font-family:var(--mono)">~$500</td><td style="text-align:right;font-family:var(--mono)">3–4 yrs</td><td><span class="badge b2">Forward-looking</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ INCOME SIMULATOR ═══ -->
+<div id="page-income-sim" class="page">
+  <div class="ph-eye">Income Growth Simulator</div>
+  <div class="ph-title">What a Raise <em>Actually</em> Does</div>
+  <div class="ph-sub">Drag to your target salary. See exactly how much faster loans die, how surplus grows, and when you hit $8,888.88.</div>
+
+  <div class="sg sg2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-title">Janette income scenarios</div>
+      <div class="slr"><span style="color:var(--muted);font-size:12px">Annual salary</span><span class="slv c-her" id="sim-her-sal">$75,000</span></div>
+      <input type="range" id="sim-her-sl" min="65000" max="150000" step="1000" value="75000" oninput="rSim()" style="accent-color:var(--her)">
+      <div class="sle"><span>$65K</span><span>$150K</span></div>
+      <div class="sim-result" id="sim-her-result" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Partner income scenarios</div>
+      <div class="slr"><span style="color:var(--muted);font-size:12px">Annual salary</span><span class="slv c-him" id="sim-him-sal">$120,000</span></div>
+      <input type="range" id="sim-him-sl" min="100000" max="200000" step="1000" value="120000" oninput="rSim()" style="accent-color:var(--him)">
+      <div class="sle"><span>$100K</span><span>$200K</span></div>
+      <div class="sim-result" id="sim-him-result" style="background:var(--him-light);border-color:rgba(30,58,110,0.2);margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Combined impact</div>
+    <div class="sg sg4">
+      <div class="stat" style="--ac:var(--gold)"><div class="sl">Combined take-home</div><div class="sv c-gold" id="sim-comb">—</div><div class="ss" id="sim-comb-yr">—/yr</div></div>
+      <div class="stat" style="--ac:var(--her)"><div class="sl">Additional monthly</div><div class="sv c-her" id="sim-extra">—</div><div class="ss">vs current $10,031</div></div>
+      <div class="stat" style="--ac:var(--green)"><div class="sl">Loans paid off by</div><div class="sv c-green" id="sim-df">—</div><div class="ss">at current payment rates</div></div>
+      <div class="stat" style="--ac:var(--purple)"><div class="sl">Janette hits $8,888</div><div class="sv c-purple" id="sim-8888">—</div><div class="ss">$8,888.88/mo take-home</div></div>
+    </div>
+  </div>
+
+  <div class="ch-wrap"><div class="card-title">Net worth at different income levels (5yr projection)</div><div class="ch-canvas"><canvas id="sim-chart"></canvas></div></div>
+</div>
+
+<!-- ═══ NOMAD ═══ -->
+<div id="page-nomad" class="page">
+  <div class="ph-eye">Nomad Year</div>
+  <div class="ph-title">Japan · Shanghai · <em>Taiwan</em></div>
+  <div class="ph-sub">June 2027. One year. Three countries. The math shows it beats staying in NYC.</div>
+  <div class="nh"><div><div class="nh-title">June 2027 Departure</div><div class="nh-desc">Japan (Jan ski season → Mar) · Shanghai (Apr–Sep) · Taiwan (Oct–Dec)<br>Return to 18 Battery Place · June 2028 · $3,000/mo rent</div></div><div><div class="nh-days" id="n-days">—</div><div class="nh-dlbl">days away</div></div></div>
+  <div class="sg sg4">
+    <div class="stat" style="--ac:var(--her)"><div class="sl">Combined income</div><div class="sv c-her" id="n-inc">$10,031</div><div class="ss">/month while nomad</div></div>
+    <div class="stat" style="--ac:var(--him)"><div class="sl">Nomad budget</div><div class="sv c-him" id="n-bud-d">$4,000</div><div class="ss">combined / month</div></div>
+    <div class="stat" style="--ac:var(--gold)"><div class="sl">Available for loans</div><div class="sv c-gold" id="n-for-debt">—</div><div class="ss">/month</div></div>
+    <div class="stat" style="--ac:var(--green)"><div class="sl">Debt killed in 12mo</div><div class="sv c-green" id="n-killed">—</div><div class="ss">at this budget</div></div>
+  </div>
+  <div class="card">
+    <div class="slr"><span style="color:var(--muted);font-size:12px">Monthly nomad budget (combined)</span><span class="slv c-him" id="n-bud-sl">$4,000</span></div>
+    <input type="range" id="n-sl" min="2500" max="7000" step="100" value="4000" oninput="rNomad()">
+    <div class="sle"><span>$2,500 — budget SE Asia</span><span>$7,000 — comfortable W. Europe</span></div>
+  </div>
+  <div class="sg" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px">
+    <div class="card"><div class="card-title">Japan Jan–Mar</div><div style="font-size:12px;color:var(--muted);line-height:1.9"><div>🎿 Rusutsu / Niseko ski season</div><div>💴 Budget: <strong>~$3,500/mo</strong></div><div>🎿 Epic Pass covers Niseko lifts</div><div>🏠 Accommodation: $1,800–2,500</div><div>⚠️ Higher cost — worth every yen</div></div></div>
+    <div class="card"><div class="card-title">Shanghai Apr–Sep</div><div style="font-size:12px;color:var(--muted);line-height:1.9"><div>🏙 6-month base — long-term rental</div><div>💴 Budget: <strong>~$3,500/mo</strong></div><div>⚠️ Visa: 60-day tourist limit</div><div>🏠 Accommodation: $1,200–1,800</div><div>💻 Strong coworking scene</div></div></div>
+    <div class="card"><div class="card-title">Taiwan Oct–Dec</div><div style="font-size:12px;color:var(--muted);line-height:1.9"><div>🏝 Taipei — top nomad city in Asia</div><div>💴 Budget: <strong>~$3,000/mo</strong></div><div>✅ 90-day visa-free US citizens</div><div>🏠 Accommodation: $800–1,200</div><div>⚡ World's fastest internet</div></div></div>
+  </div>
+  <div class="ch-wrap"><div class="card-title">Debt: nomad year vs. staying in NYC</div><div class="ch-canvas"><canvas id="nomad-chart"></canvas></div></div>
+</div>
+
+<!-- ═══ TIMELINE ═══ -->
+<div id="page-timeline" class="page">
+  <div class="ph-eye">Life Timeline</div>
+  <div class="ph-title">Ages 27–35 — <em>The Plan</em></div>
+  <div class="ph-sub">Every milestone in order. From debt attack to financial freedom.</div>
+  <div id="timeline-wrap"></div>
+</div>
+
+</div><!-- end main -->
+</div><!-- end layout -->
+
+<script>
+const RATE=0.09/12, MOS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let nwChart=null,debtChart=null,nomadChart=null,logChart=null,simChart=null;
+let nomadMode=false;
+
+function usd(n){return'$'+Math.round(Math.abs(n)).toLocaleString()}
+function usdK(n){return'$'+Math.round(Math.abs(n)/1000)+'K'}
+function pct(a,b){return b>0?Math.min(100,Math.round(a/b*100)):0}
+function np(m){const d=new Date();d.setMonth(d.getMonth()+m);return MOS[d.getMonth()]+' '+d.getFullYear()}
+function payoff(bal,pmt){if(pmt<=bal*RATE||bal<=0)return 999;return Math.ceil(-Math.log(1-(bal*RATE/pmt))/Math.log(1+RATE))}
+function tInt(bal,pmt){let b=bal,t=0,m=0;while(b>0.01&&m<600){const i=b*RATE;t+=i;b-=Math.max(0,pmt-i);m++}return t}
+function days(ds){return Math.max(0,Math.ceil((new Date(ds)-new Date())/86400000))}
+
+// ─── NAV ──────────────────────────────────────────────────────
+function go(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  const fns={debt:rDebt,nw:rNW,alloc:rAlloc,home:rHome,subs:rSubs,savings:rSavings,equity:rEquity,'income-sim':rSim,nomad:rNomad};
+  if(fns[id])fns[id]();
+}
+
+// ─── SHARED DATA ──────────────────────────────────────────────
+const NW={roth:27000,hysa:1925,herCheck:1900,jointCheck:1000,himCash:5000,herLoan:21000,himLoan:130000};
+const getHerLoan=()=>+(document.getElementById('d-her-bal')?.value||21000);
+const getHimLoan=()=>+(document.getElementById('d-him-bal')?.value||130000);
+const getRoth=()=>NW.roth;
+const getHYSA=()=>NW.hysa;
+const getCash=()=>NW.herCheck+NW.jointCheck+NW.himCash;
+const getNW=()=>getRoth()+getHYSA()+getCash()-getHerLoan()-getHimLoan();
+
+// ─── BUDGET DATA ──────────────────────────────────────────────
+// Monthly conversions applied:
+// Coffee $10/wk=~$43/mo | Friends dining $40×2=$80/mo | Personal food $20/wk=~$87/mo
+// Skincare $50/3mo=~$17/mo | Haircut $40/yr=~$3/mo | Marathon $255/yr=~$21/mo
+// Shoes/gear $150/3mo=$50/mo | Epic Pass $700×2/12=~$117/mo joint
+// Clothing $100/3mo=~$33/mo | Books $50/3mo=~$17/mo
+// Partner food $25/day×5×52/12=~$542/mo | Barber $40/3mo=~$13/mo | Clothes $100/6mo=~$17/mo
+const BUDGETS={
+  janette:{
+    title:'Janette Personal', color:'var(--her)',
+    groups:[
+      {name:'Food & Drink',items:[
+        {i:'☕',n:'Coffee — solo commute',note:'~$10/week',amt:43,nomadAmt:43},
+        {i:'🍽',n:'Dining with friends',note:'$40/meal × 2x/month',amt:80,nomadAmt:80},
+        {i:'🍱',n:'Personal food & snacks',note:'~$20/week',amt:87,nomadAmt:50},
+      ]},
+      {name:'Appearance',items:[
+        {i:'💇',n:'Haircut',note:'$40 once a year ÷ 12',amt:3,nomadAmt:5},
+        {i:'🧴',n:'Skincare',note:'$50 every 3 months ÷ 3',amt:17,nomadAmt:17},
+      ]},
+      {name:'Running',items:[
+        {i:'🏅',n:'Race entry fees',note:'$255/yr ÷ 12',amt:21,nomadAmt:10},
+        {i:'👟',n:'Running shoes & gear',note:'$150 every 3 months ÷ 3',amt:50,nomadAmt:50},
+      ]},
+      {name:'Transport',items:[
+        {i:'🚇',n:'MetroCard — Janette',note:'Monthly unlimited',amt:134,nomadAmt:0},
+      ]},
+      {name:'Personal & Misc',items:[
+        {i:'👗',n:'Clothing',note:'$100 every 3 months ÷ 3',amt:33,nomadAmt:33},
+        {i:'📚',n:'Books',note:'$50 every 3 months ÷ 3',amt:17,nomadAmt:17},
+        {i:'📱',n:'Personal subscriptions',note:'NYT, personal apps',amt:27,nomadAmt:27},
+        {i:'🎁',n:'Personal gifts',note:'Your friends & family',amt:40,nomadAmt:30},
+        {i:'🛍',n:'Misc / Amazon',note:'~$30/month',amt:30,nomadAmt:30},
+      ]},
+    ]
+  },
+  partner:{
+    title:'Partner Personal', color:'var(--him)',
+    groups:[
+      {name:'Family Obligation',items:[
+        {i:'👨‍👩‍👧',n:'Family contribution',note:'Non-negotiable monthly obligation',amt:800,nomadAmt:400},
+      ]},
+      {name:'Food & Drink',items:[
+        {i:'🍱',n:'Personal food',note:'$25/day × 5 days/wk × 52 ÷ 12',amt:542,nomadAmt:0},
+        {i:'☕',n:'Coffee — solo',note:'~$10/week',amt:43,nomadAmt:43},
+      ]},
+      {name:'Appearance & Clothing',items:[
+        {i:'✂️',n:'Barber',note:'$40 every 3 months ÷ 3',amt:13,nomadAmt:10},
+        {i:'👔',n:'Clothing',note:'$100 every 6 months ÷ 6',amt:17,nomadAmt:17},
+      ]},
+      {name:'Transport',items:[
+        {i:'🚇',n:'MetroCard — Partner',note:'Monthly unlimited',amt:134,nomadAmt:0},
+      ]},
+      {name:'Personal & Misc',items:[
+        {i:'📱',n:'Personal subscriptions',note:'⚠️ Confirm with partner — est. $200/mo',amt:200,nomadAmt:200},
+        {i:'🛍',n:'Misc / Amazon',note:'~$30/month',amt:30,nomadAmt:30},
+        {i:'🎁',n:'Personal gifts',note:'His friends',amt:40,nomadAmt:30},
+      ]},
+    ]
+  },
+  joint:{
+    title:'Joint Shared', color:'var(--gold)',
+    groups:[
+      {name:'Food & Home',items:[
+        {i:'🛒',n:'Groceries',note:'$0 now — his mom cooks. Updates when abroad.',amt:0,nomadAmt:600},
+        {i:'🧹',n:'Household supplies',note:'Cleaning products, misc',amt:20,nomadAmt:50},
+        {i:'🍣',n:'Weekend restaurants',note:'Lunches out together — $200/mo',amt:200,nomadAmt:300},
+        {i:'🍜',n:'Family dinners — treating family',note:'Monthly treat',amt:150,nomadAmt:100},
+      ]},
+      {name:'Snowboarding (Both)',items:[
+        {i:'🎿',n:'Epic Pass — both',note:'$700/person/yr × 2 ÷ 12',amt:117,nomadAmt:0},
+      ]},
+      {name:'Shared Subscriptions',items:[
+        {i:'🎬',n:'Netflix',note:'Shared',amt:17,nomadAmt:17},
+        {i:'🎵',n:'Spotify family',note:'Both',amt:17,nomadAmt:17},
+        {i:'📦',n:'Amazon Prime',note:'Household',amt:15,nomadAmt:15},
+        {i:'☁️',n:'iCloud / Google storage',note:'Shared plan',amt:3,nomadAmt:3},
+        {i:'🌸',n:'Crunchyroll',note:'Shared anime streaming',amt:8,nomadAmt:8},
+      ]},
+      {name:'Celebrations',items:[
+        {i:'💕',n:'Anniversary & special dates',note:'Intentional couple celebration',amt:25,nomadAmt:25},
+      ]},
+    ]
+  }
+};
+
+function getAmt(item){return nomadMode?item.nomadAmt:item.amt}
+
+function totalBudget(key){
+  return BUDGETS[key].groups.reduce((s,g)=>s+g.items.reduce((ss,i)=>ss+getAmt(i),0),0);
+}
+
+// ─── HOME ─────────────────────────────────────────────────────
+function rHome(){
+  const nw=getNW();
+  const el=document.getElementById('h-nw');
+  el.textContent=usd(nw);el.className='nhv '+(nw>=0?'':'neg');
+  document.getElementById('h-nw-sub').textContent=nw<0?usd(Math.abs(nw))+' until net worth crosses zero':'Positive net worth ✓';
+  document.getElementById('h-roth').textContent=usd(getRoth());
+  document.getElementById('h-hysa').textContent=usd(getHYSA());
+  document.getElementById('h-cash').textContent=usd(getCash());
+  document.getElementById('h-hloan').textContent='('+usd(getHerLoan())+')';
+  document.getElementById('h-ploan').textContent='('+usd(getHimLoan())+')';
+  document.getElementById('h-income').textContent='$10,031';
+  document.getElementById('h-to-debt').textContent='$4,927';
+  document.getElementById('h-int-mo').textContent=usd((getHerLoan()+getHimLoan())*RATE);
+  document.getElementById('h-df').textContent='~Late 2029';
+
+  const buckets=[
+    {n:'Emergency Fund',s:3925,t:25000,c:'var(--him)'},
+    {n:'Hokkaido 2027 ⛷',s:200,t:6000,c:'var(--gold)'},
+    {n:'Baby Fund 👶',s:0,t:20000,c:'var(--her)'},
+    {n:'Move-Out Fund 🏠',s:0,t:15000,c:'var(--him)'},
+    {n:'Holiday Gifts 🎁',s:0,t:1200,c:'var(--gold)'},
+    {n:'Travel Fund ✈️',s:0,t:5000,c:'var(--her)'},
+  ];
+  document.getElementById('h-buckets').innerHTML=buckets.map(b=>{const p=pct(b.s,b.t);return`
+    <div style="background:white;border:1px solid var(--border);border-radius:var(--rl);padding:15px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px"><span style="font-weight:600">${b.n}</span><span style="font-family:var(--mono);color:${b.c}">${p}%</span></div>
+      <div style="height:5px;background:var(--cream);border-radius:3px;overflow:hidden;margin-bottom:7px"><div style="width:${p}%;height:100%;background:${b.c};border-radius:3px"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);color:var(--muted2)"><span style="color:${b.c};font-weight:600">${usd(b.s)}</span><span>${usd(b.t)}</span></div>
+    </div>`}).join('');
+
+  const ms=[
+    {i:'💳',t:'CC Debt Cleared',d:'April 2026',s:'done'},
+    {i:'📈',t:'2025 Roth Maxed',d:'April 2026',s:'done'},
+    {i:'🎓',t:'Columbia MS',d:'Summer 2026',s:'active'},
+    {i:'💼',t:'Partner Job Starts',d:'May 2026',s:'active'},
+    {i:'✈️',t:'Nomad Year',d:'June 2027',s:'future'},
+    {i:'💸',t:'Janette Debt-Free',d:np(payoff(getHerLoan(),2427)),s:'future'},
+    {i:'🎉',t:'Both Debt-Free',d:'~Late 2029',s:'future'},
+    {i:'🏠',t:'18 Battery Place',d:'June 2028',s:'future'},
+  ];
+  document.getElementById('h-milestones').innerHTML=ms.map(m=>`
+    <div style="background:${m.s==='done'?'var(--her-light)':m.s==='active'?'var(--gold-light)':'white'};border:1px solid ${m.s==='done'?'rgba(26,107,90,0.25)':m.s==='active'?'rgba(139,94,0,0.25)':'var(--border)'};border-radius:var(--rl);padding:14px">
+      <div style="font-size:18px;margin-bottom:6px">${m.i}</div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:2px">${m.t}</div>
+      <div style="font-size:10px;font-family:var(--mono);color:${m.s==='done'?'var(--her)':m.s==='active'?'var(--gold)':'var(--muted2)'};margin-bottom:6px">${m.d}</div>
+      <span style="display:inline-block;font-size:9px;font-family:var(--mono);font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border-radius:3px;background:${m.s==='done'?'rgba(26,107,90,0.12)':m.s==='active'?'rgba(139,94,0,0.12)':'var(--cream)'};color:${m.s==='done'?'var(--her)':m.s==='active'?'var(--gold)':'var(--muted)'}">${m.s==='done'?'Done':m.s==='active'?'In progress':'Upcoming'}</span>
+    </div>`).join('');
+}
+
+// ─── ALLOCATION ───────────────────────────────────────────────
+const ALLOC=[
+  {p:1,l:'401(k) — Partner (match + beyond)',c:'Investing',her:0,him:1958,note:'Pre-tax — already deducted',pb:'b1'},
+  {p:2,l:'Janette Roth IRA',c:'Investing',her:583,him:0,note:'Only tax shelter — non-negotiable',pb:'b1'},
+  {p:2,l:'Partner Roth IRA',c:'Investing',her:0,him:583,note:'$7,000/yr ÷ 12',pb:'b1'},
+  {p:3,l:'Emergency fund building',c:'Safety',her:300,him:300,note:'Until $25K cash',pb:'b2'},
+  {p:4,l:'Janette loan — extra payment',c:'Debt',her:2227,him:0,note:'Kill $21K in ~9 months',pb:'b3'},
+  {p:4,l:'Janette loan — minimum',c:'Debt',her:200,him:0,note:'Stay current',pb:'b3'},
+  {p:4,l:'Partner loan — extra payment',c:'Debt',her:0,him:1700,note:'Aggressive paydown',pb:'b3'},
+  {p:4,l:'Partner loan — minimum',c:'Debt',her:0,him:800,note:'Stay current',pb:'b3'},
+  {p:5,l:'Janette personal allowance',c:'Personal',her:505,him:0,note:'Her full personal budget',pb:'b4'},
+  {p:5,l:'Partner personal allowance',c:'Personal',her:0,him:1799,note:'Excl. family contribution',pb:'b4'},
+  {p:5,l:'Partner family contribution',c:'Obligation',her:0,him:800,note:'Non-negotiable',pb:'b4'},
+  {p:5,l:'Joint shared expenses',c:'Joint',her:254,him:303,note:'65/35 equity split',pb:'b4'},
+  {p:5,l:'HYSA buckets',c:'Savings',her:280,him:520,note:'Baby, move-out, Hokkaido, holiday',pb:'b4'},
+];
+
+function rAlloc(){
+  const her=+(document.getElementById('a-her').value)||4510;
+  const him=+(document.getElementById('a-him').value)||5521;
+  const comb=her+him;
+  const tHer=ALLOC.reduce((s,i)=>s+i.her,0);
+  const tHim=ALLOC.reduce((s,i)=>s+i.him,0);
+  const tot=tHer+tHim;
+  const surp=comb-tot;
+  document.getElementById('a-comb').textContent=usd(comb);
+  document.getElementById('a-comb-yr').textContent=usd(comb*12)+'/yr';
+  document.getElementById('a-alloc').textContent=usd(tot);
+  document.getElementById('a-alloc-p').textContent=pct(tot,comb)+'% of take-home';
+  const se=document.getElementById('a-surp');
+  se.textContent=usd(Math.abs(surp))+(surp>=0?' surplus':' over');
+  se.className='sv '+(surp>=0?'c-green':'c-red');
+  document.getElementById('a-surp-n').textContent=surp>=0?'Redirect → extra loan payment':'Trim spending';
+
+  const pl=['First','Always','Build','Aggressive','Lifestyle'];
+  let html='';
+  ALLOC.forEach(item=>{
+    const co=item.her+item.him;
+    const pc=Math.round(co/comb*100);
+    html+=`<tr>
+      <td><span class="badge ${item.pb}">${pl[item.p-1]}</span></td>
+      <td><div style="font-weight:500;font-size:13px">${item.l}</div><div style="font-size:10px;color:var(--muted2);margin-top:1px">${item.note}</div></td>
+      <td style="color:var(--muted)">${item.c}</td>
+      <td style="color:var(--her)">${item.her>0?usd(item.her):'—'}</td>
+      <td style="color:var(--him)">${item.him>0?usd(item.him):'—'}</td>
+      <td style="font-weight:600">${usd(co)}</td>
+      <td style="color:var(--muted)">${usd(co*12)}</td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:3px;background:var(--cream);border-radius:2px;overflow:hidden;min-width:50px"><div style="width:${Math.min(100,pc*3)}%;height:100%;background:var(--her);border-radius:2px"></div></div><span style="font-family:var(--mono);font-size:11px">${pc}%</span></div></td>
+    </tr>`;
+  });
+  html+=`<tr class="tr-total"><td colspan="3">TOTAL ALLOCATED</td><td>${usd(tHer)}</td><td>${usd(tHim)}</td><td>${usd(tot)}</td><td>${usd(tot*12)}</td><td style="font-family:var(--mono)">${pct(tot,comb)}%</td></tr>`;
+  html+=`<tr class="${surp>=0?'tr-good':'tr-warn'}"><td colspan="3" style="color:${surp>=0?'var(--green)':'var(--red)'}">${surp>=0?'SURPLUS':'SHORTFALL'}</td><td colspan="4" style="color:${surp>=0?'var(--green)':'var(--red)'}">${usd(Math.abs(surp))}/mo · ${usd(Math.abs(surp)*12)}/yr</td><td></td></tr>`;
+  document.getElementById('alloc-tbl').querySelector('tbody').innerHTML=html;
+}
+
+// ─── BUDGET ───────────────────────────────────────────────────
+function toggleNomadMode(){
+  nomadMode=!nomadMode;
+  const sw=document.getElementById('nomad-toggle');
+  sw.classList.toggle('on',nomadMode);
+  document.getElementById('nomad-mode-label').innerHTML=nomadMode
+    ?'<strong>Nomad mode</strong> — abroad budget: groceries up, MetroCards gone, food costs shift.'
+    :'<strong>Home mode</strong> — his mom cooks, no rent. Switch to nomad mode to see abroad budget.';
+  buildBudget();
+}
+
+function buildBudget(){
+  const keys=['janette','partner','joint'];
+  document.getElementById('budget-panels').innerHTML=keys.map(key=>{
+    const B=BUDGETS[key];
+    const total=B.groups.reduce((s,g)=>s+g.items.reduce((ss,i)=>ss+getAmt(i),0),0);
+    const rows=B.groups.map(g=>{
+      const gt=g.items.reduce((s,i)=>s+getAmt(i),0);
+      return`<div class="bp-grp">${g.name} · ${usd(gt)}/mo</div>`+
+        g.items.map(item=>`<div class="bp-row">
+          <div class="bp-left"><span class="bp-icon">${item.i}</span><div><div class="bp-name">${item.n}</div><div class="bp-note">${item.note}</div></div></div>
+          <div class="bp-right">
+            <input class="bpi" type="number" value="${getAmt(item)}" oninput="updBudget('${key}','${item.n}',this.value,${nomadMode})">
+            <div class="bp-ann">${usd(getAmt(item)*12)}/yr</div>
+          </div>
+        </div>`).join('');
+    }).join('');
+    return`<div class="bp"><div class="bp-head"><div class="bp-ht" style="color:${B.color}">${B.title}</div><div class="bp-htot" style="color:${B.color}" id="bp-tot-${key}">${usd(total)}/mo</div></div>${rows}</div>`;
+  }).join('');
+  updateBudgetStats();
+}
+
+function updBudget(key,name,val,isNomad){
+  for(const g of BUDGETS[key].groups){
+    const item=g.items.find(i=>i.n===name);
+    if(item){if(isNomad)item.nomadAmt=Math.max(0,parseInt(val)||0);else item.amt=Math.max(0,parseInt(val)||0);break}
+  }
+  updateBudgetStats();
+}
+
+function updateBudgetStats(){
+  ['janette','partner','joint'].forEach(k=>{
+    const tot=totalBudget(k);
+    const el=document.getElementById('bp-tot-'+k);if(el)el.textContent=usd(tot)+'/mo';
+    if(k==='janette'){const t=document.getElementById('b-her-tot');const a=document.getElementById('b-her-yr');if(t){t.textContent=usd(tot);a.textContent=usd(tot*12)+'/yr'}}
+    if(k==='partner'){const t=document.getElementById('b-him-tot');const a=document.getElementById('b-him-yr');if(t){t.textContent=usd(tot);a.textContent=usd(tot*12)+'/yr'}}
+    if(k==='joint'){const t=document.getElementById('b-jnt-tot');const a=document.getElementById('b-jnt-yr');if(t){t.textContent=usd(tot);a.textContent=usd(tot*12)+'/yr'}}
+  });
+}
+
+// ─── SUBSCRIPTIONS ────────────────────────────────────────────
+let SUBS=[
+  {i:'📰',n:'NYT / News apps',who:'her',amt:17},
+  {i:'📱',n:'Personal apps (Janette)',who:'her',amt:10},
+  {i:'🎬',n:'Netflix',who:'joint',amt:17},
+  {i:'🎵',n:'Spotify family',who:'joint',amt:17},
+  {i:'📦',n:'Amazon Prime',who:'joint',amt:15},
+  {i:'☁️',n:'iCloud / Google storage',who:'joint',amt:3},
+  {i:'🌸',n:'Crunchyroll',who:'joint',amt:8},
+  {i:'📱',n:'Partner subscriptions (est.)',who:'him',amt:200},
+];
+
+function rSubs(){
+  const herTot=SUBS.filter(s=>s.who==='her').reduce((a,s)=>a+s.amt,0);
+  const himTot=SUBS.filter(s=>s.who==='him').reduce((a,s)=>a+s.amt,0);
+  const jntTot=SUBS.filter(s=>s.who==='joint').reduce((a,s)=>a+s.amt,0);
+  const total=herTot+himTot+jntTot;
+  document.getElementById('s-her-tot').textContent=usd(herTot);document.getElementById('s-her-yr').textContent=usd(herTot*12)+'/yr';
+  document.getElementById('s-him-tot').textContent=usd(himTot);document.getElementById('s-him-yr').textContent=usd(himTot*12)+'/yr';
+  document.getElementById('s-jnt-tot').textContent=usd(jntTot);document.getElementById('s-jnt-yr').textContent=usd(jntTot*12)+'/yr';
+  document.getElementById('sub-warn').textContent=`Combined subscriptions: ${usd(total)}/mo · ${usd(total*12)}/yr. Partner's ${usd(himTot)}/mo needs confirmation — sit down together and list every charge on his statements.`;
+  document.getElementById('sub-list').innerHTML=SUBS.map((s,idx)=>`
+    <div class="sub-row">
+      <span class="sub-icon">${s.i}</span>
+      <div><div class="sub-name">${s.n}</div></div>
+      <input class="sub-inp" type="number" value="${s.amt}" oninput="updSub(${idx},this.value)">
+      <span style="text-align:right;font-family:var(--mono);font-size:11px">${usd(s.amt*12)}</span>
+      <span class="sub-who sw-${s.who}" style="text-align:center">${s.who==='her'?'Janette':s.who==='him'?'Partner':'Joint'}</span>
+      <button class="sub-del" onclick="delSub(${idx})">✕</button>
+    </div>`).join('');
+}
+
+function updSub(idx,val){SUBS[idx].amt=Math.max(0,parseInt(val)||0);rSubs()}
+function delSub(idx){SUBS.splice(idx,1);rSubs()}
+function addSub(){SUBS.push({i:'📱',n:'New subscription',who:'joint',amt:0});rSubs()}
+
+// ─── NET WORTH ─────────────────────────────────────────────────
+const NW_FIELDS=[
+  {id:'nw-roth',label:'Roth IRA (Janette)',val:27000,asset:true},
+  {id:'nw-hysa',label:'HYSA (emergency + buckets)',val:1925,asset:true},
+  {id:'nw-her-check',label:'Janette checking',val:1900,asset:true},
+  {id:'nw-joint-check',label:'Joint checking',val:1000,asset:true},
+  {id:'nw-him-cash',label:'Partner cash',val:5000,asset:true},
+  {id:'nw-her-loan',label:'Janette student loan',val:21000,asset:false},
+  {id:'nw-him-loan',label:'Partner student loan',val:130000,asset:false},
+];
+
+function buildNWFields(){
+  const aF=NW_FIELDS.filter(f=>f.asset);
+  const lF=NW_FIELDS.filter(f=>!f.asset);
+  document.getElementById('nw-assets-list').innerHTML=aF.map(f=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--cream)">
+      <span style="font-size:13px;color:var(--muted)">${f.label}</span>
+      <input id="${f.id}" class="fi" type="number" value="${f.val}" oninput="rNW()" style="width:130px;font-size:12px;padding:5px 8px">
+    </div>`).join('')+
+    `<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:700">
+      <span>Total assets</span><span class="c-her" id="nw-total-assets" style="font-family:var(--mono)">—</span></div>`;
+  document.getElementById('nw-liab-list').innerHTML=lF.map(f=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--cream)">
+      <span style="font-size:13px;color:var(--muted)">${f.label}</span>
+      <input id="${f.id}" class="fi" type="number" value="${f.val}" oninput="rNW()" style="width:130px;font-size:12px;padding:5px 8px">
+    </div>`).join('')+
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--cream);font-size:13px;color:var(--muted)"><span>CC debt</span><span style="color:var(--green);font-family:var(--mono);font-weight:600">$0 — cleared ✓</span></div>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:700">
+      <span>Total liabilities</span><span class="c-red" id="nw-total-liab" style="font-family:var(--mono)">—</span></div>`;
+}
+
+function getFieldVal(id,def){return+(document.getElementById(id)?.value||def)}
+
+function rNW(){
+  const assets=NW_FIELDS.filter(f=>f.asset).reduce((s,f)=>s+getFieldVal(f.id,f.val),0);
+  const liab=NW_FIELDS.filter(f=>!f.asset).reduce((s,f)=>s+getFieldVal(f.id,f.val),0);
+  const nw=assets-liab;
+  const nwEl=document.getElementById('nw-val');nwEl.textContent=usd(nw);nwEl.className='nhv '+(nw>=0?'':'neg');
+  document.getElementById('nw-sub').textContent=nw<0?usd(Math.abs(nw))+' until positive':'Positive net worth ✓';
+  document.getElementById('nw-assets').textContent=usd(assets);
+  document.getElementById('nw-liab').textContent='('+usd(liab)+')';
+  const tal=document.getElementById('nw-total-assets');if(tal)tal.textContent=usd(assets);
+  const tll=document.getElementById('nw-total-liab');if(tll)tll.textContent='('+usd(liab)+')';
+
+  const herLoan=getFieldVal('nw-her-loan',21000);
+  const himLoan=getFieldVal('nw-him-loan',130000);
+  const mo=60;
+  let hB=herLoan,pB=himLoan,roth=getFieldVal('nw-roth',27000),cash=assets-roth;
+  const nwData=[nw];
+  let zeroCross=null;
+  for(let m=0;m<mo;m++){
+    const hi=hB*RATE;hB=Math.max(0,hB-(Math.min(2427,hB+hi)-hi));
+    const pi=pB*RATE;pB=Math.max(0,pB-(Math.min(2500,pB+pi)-pi));
+    roth=roth*(1+0.07/12)+583;
+    cash=cash*(1+0.045/12)+400;
+    const curr=roth+cash-hB-pB;
+    nwData.push(Math.round(curr));
+    if(!zeroCross&&curr>=0)zeroCross=np(m+1);
+  }
+  document.getElementById('nw-zero').textContent=zeroCross||'Already positive';
+  document.getElementById('nw-5yr').textContent=usdK(nwData[60]);
+
+  const labels=nwData.map((_,i)=>i%6===0?np(i):'');
+  if(nwChart)nwChart.destroy();
+  nwChart=new Chart(document.getElementById('nw-chart'),{type:'line',data:{labels,datasets:[{label:'Net Worth',data:nwData,borderColor:'#1A6B5A',backgroundColor:'rgba(26,107,90,0.06)',fill:true,borderWidth:2,pointRadius:0,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>usd(ctx.parsed.y)}}},scales:{x:{ticks:{color:'#9B948C',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{color:'#9B948C',font:{size:10},callback:v=>usdK(v)},grid:{color:'rgba(0,0,0,0.04)'}}}}});
+}
+
+// ─── DEBT ─────────────────────────────────────────────────────
+function rDebt(){
+  const hB=+(document.getElementById('d-her-bal').value)||0;
+  const pB=+(document.getElementById('d-him-bal').value)||0;
+  const hP=+(document.getElementById('d-her-sl').value)||0;
+  const pP=+(document.getElementById('d-him-sl').value)||0;
+  document.getElementById('d-her-bal-d').textContent=usd(hB);
+  document.getElementById('d-him-bal-d').textContent=usd(pB);
+  document.getElementById('d-her-int-d').textContent=`9% APR · ${usd(hB*RATE)}/mo interest`;
+  document.getElementById('d-him-int-d').textContent=`9% APR · ${usd(pB*RATE)}/mo interest`;
+  document.getElementById('d-her-pmt-l').textContent=usd(hP);
+  document.getElementById('d-him-pmt-l').textContent=usd(pP);
+  document.getElementById('d-interest-info').textContent=`$${Math.round(hB*RATE)}/mo interest on Janette's loan + $${Math.round(pB*RATE)}/mo on Partner's = $${Math.round((hB+pB)*RATE)}/mo combined lost to interest. Every extra dollar of principal eliminates $1.09 in future payments.`;
+  const hM=payoff(hB,hP);const pM=payoff(pB,pP);
+  const hOrig=21000,pOrig=130000;
+  document.getElementById('d-her-po').textContent=hM<999?np(hM):'—';
+  document.getElementById('d-him-po').textContent=pM<999?np(pM):'—';
+  document.getElementById('d-her-mo').textContent=hM<999?hM+' months':'—';
+  document.getElementById('d-him-mo').textContent=pM<999?pM+' months':'—';
+  document.getElementById('d-her-ti').textContent=usd(tInt(hB,hP));
+  document.getElementById('d-him-ti').textContent=usd(tInt(pB,pP));
+  document.getElementById('d-her-pct').textContent=pct(hOrig-hB,hOrig)+'% paid';
+  document.getElementById('d-him-pct').textContent=pct(pOrig-pB,pOrig)+'% paid';
+  document.getElementById('d-her-prog').style.width=pct(hOrig-hB,hOrig)+'%';
+  document.getElementById('d-him-prog').style.width=pct(pOrig-pB,pOrig)+'%';
+
+  const maxMo=Math.min(Math.max(hM<999?hM:0,pM<999?pM:0,60),84);
+  let hBal=hB,pBal=pB;const hData=[hB],pData=[pB];
+  for(let m=0;m<maxMo;m++){
+    const hi=hBal*RATE;hBal=Math.max(0,hBal-(Math.min(hP,hBal+hi)-hi));
+    const pi=pBal*RATE;pBal=Math.max(0,pBal-(Math.min(pP,pBal+pi)-pi));
+    hData.push(hBal);pData.push(pBal);
+  }
+  const labs=hData.map((_,i)=>i%6===0?np(i):'');
+  if(debtChart)debtChart.destroy();
+  debtChart=new Chart(document.getElementById('debt-chart'),{type:'line',data:{labels:labs,datasets:[{label:'Janette',data:hData,borderColor:'#1A6B5A',borderWidth:2,pointRadius:0,tension:0.4,fill:false},{label:'Partner',data:pData,borderColor:'#1E3A6E',borderWidth:2,pointRadius:0,tension:0.4,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6B6560',font:{size:11,family:'Roboto Mono'}}},tooltip:{callbacks:{label:ctx=>usd(ctx.parsed.y)}}},scales:{x:{ticks:{color:'#9B948C',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{color:'#9B948C',font:{size:10},callback:v=>'$'+Math.round(v/1000)+'K'},grid:{color:'rgba(0,0,0,0.04)'},min:0}}}});
+
+  function amort(bal,pmt,tid,col){
+    let b=bal;const rows=[];
+    for(let m=1;b>0.01&&m<=120;m++){const i=b*RATE;const pr=Math.min(b,pmt-i);b=Math.max(0,b-pr);if(m%3===0||m===1||b<=0.01)rows.push({m,i,pr,b,last:b<=0.01});if(b<=0.01)break}
+    document.getElementById(tid).innerHTML=`<thead><tr><th>Month</th><th>Payment</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody>${rows.map(r=>`<tr style="${r.last?'background:var(--her-light)':''}"><td style="color:var(--muted);font-family:var(--mono)">${np(r.m)}</td><td>${usd(Math.min(pmt,r.pr+r.i))}</td><td style="color:var(--red)">${usd(r.i)}</td><td style="color:${col}">${usd(r.pr)}</td><td style="font-weight:${r.last?700:400};color:${r.last?col:'inherit'}">${r.last?'PAID OFF 🎉':usd(r.b)}</td></tr>`).join('')}</tbody>`;
+  }
+  amort(hB,hP,'amort-her','var(--her)');amort(pB,pP,'amort-him','var(--him)');
+}
+
+// ─── BIWEEKLY LOG ─────────────────────────────────────────────
+let LOG=[{date:'2026-05-01',herBal:21000,himBal:130000}];
+let logChartInst=null;
+
+function rLog(){
+  const latest=LOG[LOG.length-1];
+  document.getElementById('log-her-curr').textContent=usd(latest.herBal);
+  document.getElementById('log-him-curr').textContent=usd(latest.himBal);
+
+  // Projected at 2427 and 2500/mo
+  const mFrom=Math.round((new Date()-new Date('2026-05-01'))/2592000000);
+  let projHer=21000,projHim=130000;
+  for(let m=0;m<mFrom;m++){const hi=projHer*RATE;projHer=Math.max(0,projHer-(2427-hi));const pi=projHim*RATE;projHim=Math.max(0,projHim-(2500-pi))}
+  const herDiff=projHer-latest.herBal;const himDiff=projHim-latest.himBal;
+  const herVs=document.getElementById('log-her-vs');herVs.textContent=herDiff>100?usd(herDiff)+' ahead':'On track';herVs.className='sv '+(herDiff>=0?'c-green':'c-red');
+  const himVs=document.getElementById('log-him-vs');himVs.textContent=himDiff>100?usd(himDiff)+' ahead':'On track';himVs.className='sv '+(himDiff>=0?'c-green':'c-red');
+  document.getElementById('log-her-vs-s').textContent='vs projected';
+  document.getElementById('log-him-vs-s').textContent='vs projected';
+
+  // Chart
+  const proj=[];let h=21000,p=130000;
+  for(let m=0;m<=60;m++){proj.push({m,h:Math.round(h+p)});const hi=h*RATE;h=Math.max(0,h-(2427-hi));const pi=p*RATE;p=Math.max(0,p-(2500-pi))}
+  const logLabels=proj.map(x=>np(x.m));
+  const projData=proj.map(x=>x.h);
+  const actualData=LOG.map(l=>l.herBal+l.himBal);
+  const actualLabels=LOG.map(l=>l.date);
+
+  if(logChartInst)logChartInst.destroy();
+  logChartInst=new Chart(document.getElementById('log-chart'),{type:'line',data:{labels:logLabels,datasets:[{label:'Projected',data:projData,borderColor:'#9B948C',borderWidth:1.5,pointRadius:0,tension:0.4,fill:false,borderDash:[4,4]},{label:'Actual',data:actualData.concat(Array(61-actualData.length).fill(null)),borderColor:'#1A6B5A',borderWidth:2,pointRadius:4,tension:0.2,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6B6560',font:{size:11}}},tooltip:{callbacks:{label:ctx=>usd(ctx.parsed.y)+' total'}}},scales:{x:{ticks:{color:'#9B948C',font:{size:10},maxTicksLimit:12},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{color:'#9B948C',font:{size:10},callback:v=>'$'+Math.round(v/1000)+'K'},grid:{color:'rgba(0,0,0,0.04)'},min:0}}}});
+
+  document.getElementById('log-rows').innerHTML=LOG.map((l,idx)=>{
+    const prev=LOG[idx-1];
+    const herD=prev?prev.herBal-l.herBal:0;const himD=prev?prev.himBal-l.himBal:0;
+    return`<div class="log-row">
+      <input class="log-date-inp" type="date" value="${l.date}" onchange="LOG[${idx}].date=this.value;rLog()">
+      <input class="log-inp" type="number" value="${l.herBal}" onchange="LOG[${idx}].herBal=+this.value;rLog()">
+      <input class="log-inp" type="number" value="${l.himBal}" onchange="LOG[${idx}].himBal=+this.value;rLog()">
+      <span class="log-diff" style="color:${herD>0?'var(--green)':'var(--muted)'}">${idx>0?(herD>0?'↓'+usd(herD):'—'):'—'}</span>
+      <span class="log-diff" style="color:${himD>0?'var(--green)':'var(--muted)'}">${idx>0?(himD>0?'↓'+usd(himD):'—'):'—'}</span>
+      <button onclick="LOG.splice(${idx},1);rLog()" style="background:none;border:none;cursor:pointer;color:var(--muted2);font-size:13px" ${idx===0?'disabled':''}>✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addLogRow(){
+  const last=LOG[LOG.length-1];
+  const d=new Date(last.date);d.setDate(d.getDate()+14);
+  LOG.push({date:d.toISOString().split('T')[0],herBal:last.herBal,himBal:last.himBal});
+  rLog();
+}
+
+// ─── SAVINGS TIMELINE ─────────────────────────────────────────
+let BUCKETS=[
+  {n:'Emergency Fund 🛡',s:3925,t:25000,mo:400,c:'#1E3A6E'},
+  {n:'Hokkaido 2027 ⛷',s:200,t:6000,mo:350,c:'#8B5E00'},
+  {n:'Baby Fund 👶',s:0,t:20000,mo:400,c:'#1A6B5A'},
+  {n:'Move-Out Fund 🏠',s:0,t:15000,mo:500,c:'#1E3A6E'},
+  {n:'Holiday Gifts 🎁',s:0,t:1200,mo:100,c:'#8B5E00'},
+  {n:'Travel Fund ✈️',s:0,t:5000,mo:150,c:'#1A6B5A'},
+];
+
+function rSavings(){
+  document.getElementById('savings-buckets').innerHTML=BUCKETS.map((b,idx)=>{
+    const p=pct(b.s,b.t);
+    const remaining=Math.max(0,b.t-b.s);
+    const mos=b.mo>0?Math.ceil(remaining/b.mo):999;
+    const eta=mos<999?np(mos):'Set contribution';
+    return`<div class="bt-card">
+      <div class="bt-name">${b.n}</div>
+      <div class="bt-bar"><div class="bt-fill" style="width:${p}%;background:${b.c}"></div></div>
+      <div class="bt-meta"><span style="font-weight:600;color:${b.c}">${usd(b.s)}</span><span style="color:var(--muted)">${usd(b.t)} goal</span></div>
+      <div class="bt-eta" style="color:${mos<6?'var(--green)':mos<24?'var(--gold)':'var(--muted)'}">${mos<999?'Done: '+eta:'No contribution set'}</div>
+      <div class="bt-inp-row">
+        <div><div class="bt-fl">Saved</div><input class="bt-fi" type="number" value="${b.s}" onchange="BUCKETS[${idx}].s=Math.max(0,+this.value);rSavings()" oninput="BUCKETS[${idx}].s=Math.max(0,+this.value);rSavings()"></div>
+        <div><div class="bt-fl">Monthly</div><input class="bt-fi" type="number" value="${b.mo}" onchange="BUCKETS[${idx}].mo=Math.max(0,+this.value);rSavings()" oninput="BUCKETS[${idx}].mo=Math.max(0,+this.value);rSavings()"></div>
+        <div><div class="bt-fl">Target</div><input class="bt-fi" type="number" value="${b.t}" onchange="BUCKETS[${idx}].t=Math.max(1,+this.value);rSavings()" oninput="BUCKETS[${idx}].t=Math.max(1,+this.value);rSavings()"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── EQUITY TRACKER ───────────────────────────────────────────
+function rEquity(){
+  const shared=+(document.getElementById('eq-shared').value)||557;
+  const hisPct=(+(document.getElementById('eq-his-pct').value)||65)/100;
+  const stdPct=0.55;
+  const months=+(document.getElementById('eq-months').value)||0;
+  const monthly=Math.round((hisPct-stdPct)*shared);
+  const rebalanced=monthly*months;
+  const total=44920;
+  const p=pct(rebalanced,total);
+  document.getElementById('eq-rebal').textContent=usd(rebalanced);
+  document.getElementById('eq-bar').style.width=p+'%';
+  document.getElementById('eq-so-far').textContent=usd(rebalanced)+' rebalanced ('+p+'%)';
+  const yearsLeft=monthly>0?((total-rebalanced)/monthly/12).toFixed(1):0;
+  document.getElementById('eq-result').textContent=`At ${usd(monthly)}/mo differential, the $44,920 is fully acknowledged in ${yearsLeft} more years via cost absorption. Combined with partner funding shared goals disproportionately, the real timeline is closer to 2–3 years total.`;
+  document.getElementById('eq-monthly-credit').textContent=usd(monthly)+'/mo';
+  document.getElementById('eq-years-a').textContent=monthly>0?(total/monthly/12).toFixed(1)+' yrs (standalone)':'—';
+}
+
+// ─── INCOME SIMULATOR ─────────────────────────────────────────
+function taxCalc(gross,has401k){
+  const k401=has401k?23500:0;
+  const taxable=gross-k401;
+  const fed=taxable<47150?taxable*0.12:5658+(taxable-47150)*0.22;
+  const fica=gross*0.0765;
+  const ny=taxable*0.055;
+  const nyc=taxable*0.035;
+  return Math.round((gross-k401-fed-fica-ny-nyc)/12);
+}
+
+let simChartInst=null;
+
+function rSim(){
+  const herSal=+(document.getElementById('sim-her-sl').value)||75000;
+  const himSal=+(document.getElementById('sim-him-sl').value)||120000;
+  document.getElementById('sim-her-sal').textContent='$'+herSal.toLocaleString();
+  document.getElementById('sim-him-sal').textContent='$'+himSal.toLocaleString();
+  const herMo=taxCalc(herSal,false);
+  const himMo=taxCalc(himSal,true);
+  const comb=herMo+himMo;
+  const base=10031;
+  const extra=comb-base;
+  const df=extra>0?Math.max(1,Math.round(payoff(130000,2500+extra*0.7)*0.8)):payoff(130000,2500);
+  const hits8888=herMo>=8889?'Now':'~'+Math.round((8889-herMo)/(herSal*0.03/12))+' months';
+
+  document.getElementById('sim-comb').textContent=usd(comb);
+  document.getElementById('sim-comb-yr').textContent=usd(comb*12)+'/yr';
+  document.getElementById('sim-extra').textContent=(extra>=0?'+':'')+usd(extra)+'/mo';
+  document.getElementById('sim-df').textContent=df<999?np(df):'Beyond 5yr';
+  document.getElementById('sim-8888').textContent=herMo>=8889?'✓ Achieved now':'$'+(8889-herMo).toLocaleString()+' gap';
+
+  document.getElementById('sim-her-result').innerHTML=`<div class="sim-r-title" style="color:var(--her)">Janette at $${herSal.toLocaleString()}/yr</div>
+    <div class="sim-r-row"><span class="sim-r-label">Monthly take-home</span><span class="sim-r-val">${usd(herMo)}</span></div>
+    <div class="sim-r-row"><span class="sim-r-label">vs current ($4,510)</span><span class="sim-r-val">${extra>=0?'+':''} ${usd(herMo-4510)}/mo</span></div>
+    <div class="sim-r-row"><span class="sim-r-label">Annual take-home</span><span class="sim-r-val">${usd(herMo*12)}</span></div>
+    <div class="sim-r-row" style="border:none"><span class="sim-r-label">To $8,888 target</span><span class="sim-r-val">${herMo>=8889?'✓ Hit!':usd(8889-herMo)+' gap'}</span></div>`;
+
+  document.getElementById('sim-him-result').innerHTML=`<div class="sim-r-title" style="color:var(--him)">Partner at $${himSal.toLocaleString()}/yr</div>
+    <div class="sim-r-row"><span class="sim-r-label">Monthly take-home</span><span style="font-family:var(--mono);font-weight:600;color:var(--him)">${usd(himMo)}</span></div>
+    <div class="sim-r-row"><span class="sim-r-label">vs current ($5,521)</span><span style="font-family:var(--mono);font-weight:600;color:var(--him)">${himMo>=5521?'+':''} ${usd(himMo-5521)}/mo</span></div>
+    <div class="sim-r-row"><span class="sim-r-label">Annual take-home</span><span style="font-family:var(--mono);font-weight:600;color:var(--him)">${usd(himMo*12)}</span></div>
+    <div class="sim-r-row" style="border:none"><span class="sim-r-label">401k tax saved</span><span style="font-family:var(--mono);font-weight:600;color:var(--him)">~${usd(23500*0.32)}/yr</span></div>`;
+
+  // Multi-scenario chart
+  const scenarios=[
+    {herS:75000,himS:120000,label:'Current',c:'#9B948C'},
+    {herS:90000,himS:130000,label:'Janette +$15K raise',c:'#1A6B5A'},
+    {herS:100000,himS:140000,label:'Both get raises',c:'#1E3A6E'},
+    {herS:herSal,himS:himSal,label:'Your selection',c:'#8B5E00'},
+  ];
+  const scData=scenarios.map(sc=>{
+    const hM=taxCalc(sc.herS,false),pM=taxCalc(sc.himS,true),tot=hM+pM;
+    let hB=21000,pB=130000,roth=27000,savings=7825;const nwArr=[getNW()];
+    for(let m=0;m<60;m++){
+      const avail=tot-4766;
+      const hi=hB*RATE;hB=Math.max(0,hB-(Math.min(2427+(avail>4927?avail-4927:0),hB+hi)-hi));
+      const pi=pB*RATE;pB=Math.max(0,pB-(Math.min(2500,pB+pi)-pi));
+      roth=roth*(1+0.07/12)+583;savings=savings*(1+0.045/12)+400;
+      nwArr.push(Math.round(roth+savings-hB-pB));
+    }
+    return nwArr;
+  });
+  const labs=scData[0].map((_,i)=>i%6===0?np(i):'');
+  if(simChartInst)simChartInst.destroy();
+  simChartInst=new Chart(document.getElementById('sim-chart'),{type:'line',data:{labels:labs,datasets:scenarios.map((sc,i)=>({label:sc.label,data:scData[i],borderColor:sc.c,borderWidth:i===3?2.5:1.5,pointRadius:0,tension:0.4,fill:false,borderDash:i===0?[4,4]:[]}))} ,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6B6560',font:{size:11,family:'Roboto Mono'}}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+usd(ctx.parsed.y)}}},scales:{x:{ticks:{color:'#9B948C',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{color:'#9B948C',font:{size:10},callback:v=>usdK(v)},grid:{color:'rgba(0,0,0,0.04)'}}}}});
+}
+
+// ─── NOMAD ────────────────────────────────────────────────────
+let nomadChartInst=null;
+function rNomad(){
+  const d=days('2027-06-01');
+  document.getElementById('n-days').textContent=d>0?d:'NOW!';
+  const budget=+(document.getElementById('n-sl').value)||4000;
+  document.getElementById('n-bud-sl').textContent=usd(budget);
+  document.getElementById('n-bud-d').textContent=usd(budget);
+  const inc=10031,roth=1166;
+  const forDebt=Math.max(0,inc-budget-roth);
+  document.getElementById('n-for-debt').textContent=usd(forDebt);
+  document.getElementById('n-killed').textContent=usd(forDebt*12);
+  const stayD=inc-4766;
+  const months=36;const nomStart=13;
+  let nH=21000,nP=130000,sH=21000,sP=130000;
+  const nT=[nH+nP],sT=[sH+sP];
+  for(let m=0;m<months;m++){
+    const isN=m>=nomStart&&m<nomStart+12;
+    const nd=isN?forDebt:stayD;
+    if(nH>0){const i=nH*RATE;nH=Math.max(0,nH-(Math.min(nd,nH+i)-i));}else{const i=nP*RATE;nP=Math.max(0,nP-(Math.min(nd,nP+i)-i));}
+    if(sH>0){const i=sH*RATE;sH=Math.max(0,sH-(Math.min(stayD,sH+i)-i));}else{const i=sP*RATE;sP=Math.max(0,sP-(Math.min(stayD,sP+i)-i));}
+    nT.push(nH+nP);sT.push(sH+sP);
+  }
+  const labs=nT.map((_,i)=>i%6===0?np(i):'');
+  if(nomadChartInst)nomadChartInst.destroy();
+  nomadChartInst=new Chart(document.getElementById('nomad-chart'),{type:'line',data:{labels:labs,datasets:[{label:'Nomad year',data:nT,borderColor:'#1E3A6E',borderWidth:2,pointRadius:0,tension:0.4,fill:false},{label:'Stay in NYC',data:sT,borderColor:'#9B948C',borderWidth:1.5,pointRadius:0,tension:0.4,fill:false,borderDash:[4,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6B6560',font:{size:11}}}},scales:{x:{ticks:{color:'#9B948C',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{color:'#9B948C',font:{size:10},callback:v=>'$'+Math.round(v/1000)+'K'},grid:{color:'rgba(0,0,0,0.04)'},min:0}}}});
+}
+
+// ─── TIMELINE ─────────────────────────────────────────────────
+function buildTimeline(){
+  const events=[
+    {date:'Apr 2026',phase:'Right now',title:'CC Debt Eliminated + Roth Maxed',desc:'$44,920 cleared. 2025 Roth maxed — $5K VTSAX + $2K VXUS. IIPR sold, proceeds redeployed. Both accounts set up correctly.',tags:[{t:'Done ✓',c:'tt-green'},{t:'Roth 2025',c:'tt-her'}],dot:'var(--her)'},
+    {date:'May 2026',phase:'Month 1',title:'Partner Starts New Job',desc:'$120K salary. 401k — capture full match day one, check vesting schedule. Joint account system live. 65/35 equity split begins. Subscription audit this week.',tags:[{t:'Equity adj starts',c:'tt-gold'},{t:'401k match day 1',c:'tt-him'}],dot:'var(--him)'},
+    {date:'Summer 2026',phase:'Month 2–3',title:'Columbia MS Complete',desc:'Degree in hand — initiate salary negotiation immediately. Target $90–100K. Market rate for your background is higher than current $75K. Don\'t let the moment pass.',tags:[{t:'Negotiate now',c:'tt-her'},{t:'MS complete',c:'tt-gold'}],dot:'var(--gold)'},
+    {date:'Aug 2026',phase:'Month 4',title:'Health Insurance Transition',desc:'Tuition coverage expires. Join partner\'s employer plan — no gap in coverage. Personal budget gains ~$400/mo vs market rate.',tags:[{t:"On partner's plan",c:'tt-her'},{t:'No gap',c:'tt-green'}],dot:'var(--her)'},
+    {date:'End 2026',phase:'Month 8–9',title:'Janette Debt-Free',desc:'$21K student loan gone. 9 months of aggressive paydown. Redirect $2,427/mo: cover larger share of shared costs, freeing partner\'s cash for his $130K.',tags:[{t:'$21K gone',c:'tt-her'},{t:'Partner accelerates',c:'tt-him'}],dot:'var(--her)'},
+    {date:'Jun 2027',phase:'Month 14',title:'Nomad Year Begins',desc:'Both loans on US auto-pay. Remote work confirmed in writing. $10K travel emergency fund built. Charles Schwab checking open. SafetyWing health insurance active. Expat CPA booked.',tags:[{t:'Japan first ✈️',c:'tt-him'},{t:'Hokkaido ski ⛷',c:'tt-gold'}],dot:'var(--him)'},
+    {date:'Jan–Mar 2027',phase:'Nomad Leg 1',title:'Japan — Hokkaido Ski Season',desc:'Rusutsu or Niseko base. Epic Pass covers lifts. ~$3,500/mo combined. The Hokkaido trip is built into the year — not extra.',tags:[{t:'Rusutsu ⛷',c:'tt-gold'},{t:'$3,500/mo',c:'tt-him'}],dot:'var(--gold)'},
+    {date:'Apr–Sep 2027',phase:'Nomad Leg 2',title:'Shanghai',desc:'6-month base, long-term rental. Budget ~$3,500/mo combined. Check visa — 60-day tourist limit means border run or work visa for 6 months.',tags:[{t:'6-month base',c:'tt-him'},{t:'Visa check ⚠️',c:'tt-gold'}],dot:'var(--him)'},
+    {date:'Oct–Dec 2027',phase:'Nomad Leg 3',title:'Taiwan — Taipei',desc:'Best digital nomad city in Asia. 90-day visa-free for US citizens. ~$3,000/mo combined. Fastest internet in the world. Option to extend.',tags:[{t:'90-day visa-free',c:'tt-her'},{t:'Extend if needed',c:'tt-gold'}],dot:'var(--her)'},
+    {date:'Jun 2028',phase:'Return',title:'18 Battery Place',desc:'Return home. $3,000/mo rent to dad. Combined income minus rent leaves $4,000+/mo. Partner loan likely at $40–60K remaining — final sprint.',tags:[{t:'$3K/mo rent',c:'tt-gold'},{t:'Final debt sprint',c:'tt-him'}],dot:'var(--gold)'},
+    {date:'Late 2029',phase:'Age ~30',title:'Both Completely Debt-Free',desc:'$151K in combined student loans eliminated. $5,700/mo freed up immediately. Both Roths maxed. Brokerage investing begins. Baby fund complete. Net worth accelerating.',tags:[{t:'Debt-free 🎉',c:'tt-green'},{t:'$5,700/mo freed',c:'tt-her'}],dot:'var(--her)'},
+    {date:'~Age 30',phase:'Family',title:'Baby Arrives',desc:'Debt-free going in. Emergency fund $25K. Baby fund $20K. Combined income targeting $220–230K. NYC childcare ~$3,500/mo — planned for from the start.',tags:[{t:'Emergency fund ready',c:'tt-her'},{t:'Baby fund ready',c:'tt-him'}],dot:'var(--him)'},
+    {date:'Age 33–35',phase:'Wealth',title:'$8,888.88/mo Take-Home',desc:'Individual monthly target hit. Consulting firm generating revenue alongside salary. Net worth $500K+. Annual brokerage $3,000+/mo. The number that was manifested.',tags:[{t:'8888.88 ✨',c:'tt-gold'},{t:'$500K+ net worth',c:'tt-green'}],dot:'var(--gold)'},
+  ];
+  document.getElementById('timeline-wrap').innerHTML=events.map(e=>`
+    <div class="tl-item" style="--dc:${e.dot}">
+      <div class="tl-date">${e.date}</div>
+      <div class="tl-content">
+        <div class="tl-phase">${e.phase}</div>
+        <div class="tl-title">${e.title}</div>
+        <div class="tl-desc">${e.desc}</div>
+        <div class="tl-tags">${e.tags.map(t=>`<span class="tl-tag ${t.c}">${t.t}</span>`).join('')}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+rHome();
+rAlloc();
+buildBudget();
+updateBudgetStats();
+buildNWFields();
+buildTimeline();
+rSubs();
+rSavings();
+rEquity();
+setTimeout(()=>{rDebt();rNW();rNomad();rSim();rLog();},100);
+</script>
+</body>
+</html>
