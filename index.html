@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Command Center</title>
+<script src="data.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#050A14;--surf:#0B1422;--surf2:#111E30;--surf3:#192840;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#E8EEFF;--muted:#5A6A88;--muted2:#2E3D55;
+  --her:#00C9A7;--her-dim:rgba(0,201,167,0.10);
+  --him:#4F86E8;--him-dim:rgba(79,134,232,0.10);
+  --gold:#E8A020;--gold-dim:rgba(232,160,32,0.10);
+  --green:#0DB075;--green-dim:rgba(13,176,117,0.10);
+  --red:#E05050;--red-dim:rgba(224,80,80,0.10);
+  --purple:#8B6CF0;--purple-dim:rgba(139,108,240,0.10);
+  --r:12px;--r-sm:7px;
+  --font-display:'DM Serif Display',serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden}
+
+/* ── HERO HEADER ── */
+.hub-header{
+  padding:48px 2rem 0;
+  max-width:1280px;margin:0 auto;
+  display:grid;grid-template-columns:1fr auto;
+  align-items:start;gap:24px;
+}
+.hub-title{
+  font-family:var(--font-display);
+  font-size:clamp(32px,5vw,52px);
+  letter-spacing:-.02em;
+  line-height:1.1;
+  background:linear-gradient(135deg,#E8EEFF 0%,#8B9CC0 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hub-title em{
+  font-style:italic;
+  background:linear-gradient(135deg,var(--her) 0%,var(--him) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hub-subtitle{font-size:14px;color:var(--muted);margin-top:8px;font-weight:400;letter-spacing:.01em}
+.update-badge{
+  display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;padding-top:6px
+}
+.update-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:var(--font-mono)}
+.update-date{font-family:var(--font-mono);font-size:13px;color:var(--gold);font-weight:500}
+.update-next{font-size:11px;color:var(--muted2)}
+
+/* ── MAIN ── */
+main{max-width:1280px;margin:0 auto;padding:32px 2rem 64px}
+
+/* ── NET WORTH HERO ── */
+.nw-hero{
+  background:linear-gradient(135deg,var(--surf) 0%,var(--surf2) 100%);
+  border:1px solid var(--border2);
+  border-radius:var(--r);
+  padding:32px;
+  margin-bottom:24px;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:32px;
+  position:relative;
+  overflow:hidden;
+}
+.nw-hero::before{
+  content:'';position:absolute;top:-80px;right:-80px;
+  width:300px;height:300px;
+  background:radial-gradient(circle,rgba(0,201,167,0.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.nw-main{}
+.nw-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:var(--font-mono);margin-bottom:12px}
+.nw-value{font-family:var(--font-display);font-size:clamp(36px,4vw,56px);letter-spacing:-.03em;line-height:1}
+.nw-value.pos{color:var(--green)}.nw-value.neg{color:var(--red)}
+.nw-sub{font-size:12px;color:var(--muted);margin-top:8px}
+.nw-divider{width:1px;background:var(--border)}
+.nw-breakdown{}
+.nw-row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.nw-row:last-child{border-bottom:none}
+.nw-row-label{color:var(--muted)}
+.nw-row-val{font-weight:600;font-family:var(--font-mono);font-size:12px}
+
+/* ── PROGRESS BARS ── */
+.progress-section{margin-bottom:24px}
+.ps-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:var(--font-mono);margin-bottom:14px}
+.progress-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.prog-item{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.prog-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.prog-name{font-size:13px;font-weight:600}
+.prog-pct{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.prog-bar{height:6px;background:var(--surf3);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.prog-fill{height:100%;border-radius:3px;transition:width .5s}
+.prog-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+
+/* ── DEBT PANEL ── */
+.debt-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.debt-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.debt-person{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-family:var(--font-mono);margin-bottom:14px}
+.debt-balance{font-family:var(--font-display);font-size:32px;letter-spacing:-.02em;margin-bottom:4px}
+.debt-interest{font-size:12px;color:var(--muted);margin-bottom:14px;font-family:var(--font-mono)}
+.debt-bar{height:8px;background:var(--surf3);border-radius:4px;overflow:hidden;margin-bottom:10px}
+.debt-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),var(--her))}
+.debt-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ds{background:var(--surf2);border-radius:var(--r-sm);padding:10px}
+.ds-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:var(--font-mono);margin-bottom:4px}
+.ds-val{font-size:14px;font-weight:700;font-family:var(--font-mono)}
+
+/* ── MILESTONES ── */
+.milestones{margin-bottom:24px}
+.milestone-list{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.milestone{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:16px;position:relative;overflow:hidden}
+.milestone.done{border-color:rgba(13,176,117,.3);background:rgba(13,176,117,.04)}
+.milestone.active{border-color:rgba(232,160,32,.3);background:rgba(232,160,32,.04)}
+.milestone.future{opacity:.6}
+.m-icon{font-size:20px;margin-bottom:10px}
+.m-title{font-size:13px;font-weight:600;margin-bottom:4px;line-height:1.3}
+.m-date{font-size:11px;font-family:var(--font-mono);margin-bottom:6px}
+.m-date.done{color:var(--green)}.m-date.active{color:var(--gold)}.m-date.future{color:var(--muted)}
+.m-badge{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:4px}
+.mb-done{background:var(--green-dim);color:var(--green)}
+.mb-active{background:var(--gold-dim);color:var(--gold)}
+.mb-future{background:var(--surf3);color:var(--muted)}
+
+/* ── DASHBOARD LINKS ── */
+.dashboards{margin-bottom:24px}
+.dashboard-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.dash-link{
+  background:var(--surf);border:1px solid var(--border);
+  border-radius:var(--r);padding:20px;
+  text-decoration:none;color:inherit;
+  transition:all .2s;display:block;
+  position:relative;overflow:hidden;
+}
+.dash-link:hover{border-color:var(--border2);background:var(--surf2);transform:translateY(-2px)}
+.dash-link::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--her))}
+.dash-icon{font-size:24px;margin-bottom:12px}
+.dash-title{font-size:15px;font-weight:700;margin-bottom:4px}
+.dash-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.dash-updated{font-size:10px;color:var(--muted2);font-family:var(--font-mono);margin-top:10px}
+.dash-arrow{position:absolute;top:20px;right:20px;font-size:16px;color:var(--muted2)}
+
+/* ── INCOME SPLIT ── */
+.income-section{margin-bottom:24px}
+.income-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.income-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.ic-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:var(--font-mono);margin-bottom:10px}
+.ic-val{font-family:var(--font-display);font-size:28px;letter-spacing:-.02em;margin-bottom:4px}
+.ic-sub{font-size:12px;color:var(--muted)}
+.split-bar{height:8px;border-radius:4px;overflow:hidden;display:flex;margin:14px 0 8px}
+.split-her{background:var(--her);transition:width .3s}
+.split-him{background:var(--him);flex:1}
+.split-labels{display:flex;justify-content:space-between;font-size:11px;font-family:var(--font-mono)}
+
+/* ── NOMAD COUNTDOWN ── */
+.nomad-card{
+  background:linear-gradient(135deg,rgba(139,108,240,0.08) 0%,rgba(79,134,232,0.05) 100%);
+  border:1px solid rgba(139,108,240,0.2);
+  border-radius:var(--r);padding:24px;
+  margin-bottom:24px;
+  display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;
+}
+.nomad-icon{font-size:36px}
+.nomad-title{font-family:var(--font-display);font-size:22px;letter-spacing:-.01em;color:var(--purple);margin-bottom:4px}
+.nomad-desc{font-size:13px;color:var(--muted);line-height:1.6}
+.nomad-countdown{}
+.nc-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:var(--font-mono);margin-bottom:6px;text-align:right}
+.nc-days{font-family:var(--font-display);font-size:48px;color:var(--purple);line-height:1;text-align:right}
+.nc-sub{font-size:11px;color:var(--muted);text-align:right;font-family:var(--font-mono)}
+
+/* ── HOW TO UPDATE ── */
+.how-to{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:24px}
+.ht-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:var(--font-mono);margin-bottom:16px}
+.ht-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.ht-step{display:flex;flex-direction:column;gap:6px}
+.ht-num{font-family:var(--font-display);font-size:28px;color:var(--muted2);line-height:1}
+.ht-step-title{font-size:13px;font-weight:600;color:var(--text)}
+.ht-step-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.ht-code{font-family:var(--font-mono);font-size:11px;background:var(--surf2);border:1px solid var(--border);border-radius:5px;padding:6px 10px;color:var(--her);margin-top:4px;word-break:break-all}
+
+@media(max-width:768px){
+  .nw-hero{grid-template-columns:1fr}
+  .nw-divider{display:none}
+  .progress-grid,.debt-grid,.dashboard-grid,.income-grid,.milestone-list,.ht-steps{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="hub-header">
+  <div>
+    <div class="hub-title">Financial<br><em>Command Center</em></div>
+    <div class="hub-subtitle">Janette & Partner · Updated biweekly · All data in data.js</div>
+  </div>
+  <div class="update-badge">
+    <div class="update-label">Last updated</div>
+    <div class="update-date" id="last-updated">—</div>
+    <div class="update-next" id="next-update">—</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- NET WORTH HERO -->
+  <div class="nw-hero">
+    <div class="nw-main">
+      <div class="nw-label">Combined Net Worth</div>
+      <div class="nw-value" id="nw-total">—</div>
+      <div class="nw-sub" id="nw-sub">—</div>
+    </div>
+    <div class="nw-divider"></div>
+    <div class="nw-breakdown">
+      <div class="nw-label">Assets</div>
+      <div class="nw-row"><span class="nw-row-label">Roth IRA</span><span class="nw-row-val her" id="nw-roth">—</span></div>
+      <div class="nw-row"><span class="nw-row-label">HYSA (emergency + buckets)</span><span class="nw-row-val" id="nw-hysa">—</span></div>
+      <div class="nw-row"><span class="nw-row-label">Cash (checking accounts)</span><span class="nw-row-val" id="nw-cash">—</span></div>
+    </div>
+    <div class="nw-divider"></div>
+    <div class="nw-breakdown">
+      <div class="nw-label">Liabilities</div>
+      <div class="nw-row"><span class="nw-row-label">Janette student loan</span><span class="nw-row-val red" id="nw-her-loan">—</span></div>
+      <div class="nw-row"><span class="nw-row-label">Partner student loan</span><span class="nw-row-val red" id="nw-him-loan">—</span></div>
+      <div class="nw-row"><span class="nw-row-label">CC debt</span><span class="nw-row-val green">$0 — eliminated ✓</span></div>
+    </div>
+  </div>
+
+  <!-- DEBT PROGRESS -->
+  <div class="debt-grid">
+    <div class="debt-card">
+      <div class="debt-person" style="color:var(--her)">Janette — Student Loan</div>
+      <div class="debt-balance" id="her-loan-bal" style="color:var(--red)">—</div>
+      <div class="debt-interest" id="her-loan-int">—</div>
+      <div class="debt-bar"><div class="debt-fill" id="her-loan-bar" style="width:0%"></div></div>
+      <div class="debt-stats">
+        <div class="ds"><div class="ds-label">Monthly payment</div><div class="ds-val her" id="her-loan-pmt">—</div></div>
+        <div class="ds"><div class="ds-label">Est. payoff</div><div class="ds-val" id="her-loan-payoff">—</div></div>
+        <div class="ds"><div class="ds-label">Interest / mo</div><div class="ds-val red" id="her-loan-int-mo">—</div></div>
+        <div class="ds"><div class="ds-label">% paid off</div><div class="ds-val" id="her-loan-pct">—</div></div>
+      </div>
+    </div>
+    <div class="debt-card">
+      <div class="debt-person" style="color:var(--him)">Partner — Student Loan</div>
+      <div class="debt-balance" id="him-loan-bal" style="color:var(--red)">—</div>
+      <div class="debt-interest" id="him-loan-int">—</div>
+      <div class="debt-bar"><div class="debt-fill" id="him-loan-bar" style="width:0%"></div></div>
+      <div class="debt-stats">
+        <div class="ds"><div class="ds-label">Monthly payment</div><div class="ds-val him" id="him-loan-pmt">—</div></div>
+        <div class="ds"><div class="ds-label">Est. payoff</div><div class="ds-val" id="him-loan-payoff">—</div></div>
+        <div class="ds"><div class="ds-label">Interest / mo</div><div class="ds-val red" id="him-loan-int-mo">—</div></div>
+        <div class="ds"><div class="ds-label">% paid off</div><div class="ds-val" id="him-loan-pct">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVINGS PROGRESS -->
+  <div class="progress-section">
+    <div class="ps-title">Savings Buckets</div>
+    <div class="progress-grid" id="savings-grid"></div>
+  </div>
+
+  <!-- INCOME SPLIT -->
+  <div class="income-section">
+    <div class="ps-title" style="margin-bottom:14px">Income</div>
+    <div class="income-grid">
+      <div class="income-card">
+        <div class="ic-label" style="color:var(--her)">Janette take-home</div>
+        <div class="ic-val her" id="inc-her">—</div>
+        <div class="ic-sub" id="inc-her-sub">—</div>
+      </div>
+      <div class="income-card">
+        <div class="ic-label" style="color:var(--him)">Partner take-home</div>
+        <div class="ic-val him" id="inc-him">—</div>
+        <div class="ic-sub" id="inc-him-sub">—</div>
+      </div>
+      <div class="income-card">
+        <div class="ic-label">Combined</div>
+        <div class="ic-val gold" id="inc-combined">—</div>
+        <div class="split-bar">
+          <div class="split-her" id="split-her" style="width:45%"></div>
+          <div class="split-him"></div>
+        </div>
+        <div class="split-labels">
+          <span style="color:var(--her)" id="split-her-lbl">—</span>
+          <span style="color:var(--him)" id="split-him-lbl">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOMAD COUNTDOWN -->
+  <div class="nomad-card">
+    <div class="nomad-icon">✈️</div>
+    <div>
+      <div class="nomad-title">Nomad Year</div>
+      <div class="nomad-desc" id="nomad-desc">—</div>
+    </div>
+    <div class="nomad-countdown">
+      <div class="nc-label">Days until departure</div>
+      <div class="nc-days" id="nomad-days">—</div>
+      <div class="nc-sub" id="nomad-sub">—</div>
+    </div>
+  </div>
+
+  <!-- MILESTONES -->
+  <div class="milestones">
+    <div class="ps-title" style="margin-bottom:14px">Milestone Tracker</div>
+    <div class="milestone-list" id="milestone-list"></div>
+  </div>
+
+  <!-- DASHBOARD LINKS -->
+  <div class="dashboards">
+    <div class="ps-title" style="margin-bottom:14px">Dashboards</div>
+    <div class="dashboard-grid" id="dashboard-grid"></div>
+  </div>
+
+  <!-- HOW TO UPDATE -->
+  <div class="how-to">
+    <div class="ht-title">How to update this hub (biweekly, 5 minutes)</div>
+    <div class="ht-steps">
+      <div class="ht-step">
+        <div class="ht-num">01</div>
+        <div class="ht-step-title">Open data.js</div>
+        <div class="ht-step-desc">Go to your GitHub repo, click data.js, click the pencil icon to edit</div>
+      </div>
+      <div class="ht-step">
+        <div class="ht-num">02</div>
+        <div class="ht-step-title">Update numbers</div>
+        <div class="ht-step-desc">Change loan balances, savings balances, anything that moved. Only edit the numbers after the colons.</div>
+        <div class="ht-code">janetteLoan: 18500,<br>partnerLoan: 127300,<br>hysaBalance: 2400,</div>
+      </div>
+      <div class="ht-step">
+        <div class="ht-num">03</div>
+        <div class="ht-step-title">Update lastUpdated</div>
+        <div class="ht-step-desc">Change the date at the top of data.js so you know when you last did this</div>
+        <div class="ht-code">lastUpdated: "May 14, 2026",</div>
+      </div>
+      <div class="ht-step">
+        <div class="ht-num">04</div>
+        <div class="ht-step-title">Commit changes</div>
+        <div class="ht-step-desc">Scroll down, click "Commit changes". Your live site updates in about 60 seconds.</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const D = FINANCIAL_DATA;
+const RATE = D.loanRate / 12;
+
+function usd(n){return '$'+Math.round(Math.abs(n)).toLocaleString();}
+function usdK(n){return '$'+Math.round(Math.abs(n)/1000)+'K';}
+function pct(a,b){return b>0?Math.min(100,Math.round(a/b*100)):0;}
+
+function payoffMonths(bal, pmt){
+  if(pmt <= bal * RATE) return 999;
+  if(bal <= 0) return 0;
+  return Math.ceil(-Math.log(1-(bal*RATE/pmt)) / Math.log(1+RATE));
+}
+
+function addMonths(date, months){
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+
+function monthLabel(date){
+  return date.toLocaleDateString('en-US',{month:'short', year:'numeric'});
+}
+
+function daysBetween(d1, d2){
+  return Math.ceil((d2-d1)/(1000*60*60*24));
+}
+
+// ── META ──────────────────────────────────────────────────
+document.getElementById('last-updated').textContent = D.lastUpdated;
+document.getElementById('next-update').textContent = 'Next: ' + D.nextUpdateDue;
+
+// ── NET WORTH ─────────────────────────────────────────────
+const rothVal = D.rothHoldings.reduce((s,h)=>s+h.shares*h.price,0);
+const totalAssets = rothVal + D.hysaBalance + D.janetteChecking + D.jointChecking + D.partnerCash;
+const totalDebt = D.janetteLoan + D.partnerLoan;
+const netWorth = totalAssets - totalDebt;
+
+const nwEl = document.getElementById('nw-total');
+nwEl.textContent = (netWorth >= 0 ? '' : '-') + usd(netWorth);
+nwEl.className = 'nw-value ' + (netWorth >= 0 ? 'pos' : 'neg');
+document.getElementById('nw-sub').textContent = netWorth >= 0
+  ? `+${usd(netWorth)} positive net worth`
+  : `${usd(Math.abs(netWorth))} until net worth crosses zero`;
+document.getElementById('nw-roth').textContent = usd(rothVal);
+document.getElementById('nw-hysa').textContent = usd(D.hysaBalance);
+document.getElementById('nw-cash').textContent = usd(D.janetteChecking + D.jointChecking + D.partnerCash);
+document.getElementById('nw-her-loan').textContent = '(' + usd(D.janetteLoan) + ')';
+document.getElementById('nw-him-loan').textContent = '(' + usd(D.partnerLoan) + ')';
+
+// ── DEBT ──────────────────────────────────────────────────
+const herOriginal = 21000;
+const himOriginal = 130000;
+const herPaid = herOriginal - D.janetteLoan;
+const himPaid = himOriginal - D.partnerLoan;
+const herPayoffMo = payoffMonths(D.janetteLoan, D.janetteLoanPmt);
+const himPayoffMo = payoffMonths(D.partnerLoan, D.partnerLoanPmt);
+const now = new Date();
+
+document.getElementById('her-loan-bal').textContent = usd(D.janetteLoan);
+document.getElementById('him-loan-bal').textContent = usd(D.partnerLoan);
+document.getElementById('her-loan-int').textContent = `9.0% APR · ${usd(D.janetteLoan * RATE)}/mo in interest`;
+document.getElementById('him-loan-int').textContent = `9.0% APR · ${usd(D.partnerLoan * RATE)}/mo in interest`;
+document.getElementById('her-loan-bar').style.width = pct(herPaid, herOriginal) + '%';
+document.getElementById('him-loan-bar').style.width = pct(himPaid, himOriginal) + '%';
+document.getElementById('her-loan-pmt').textContent = usd(D.janetteLoanPmt) + '/mo';
+document.getElementById('him-loan-pmt').textContent = usd(D.partnerLoanPmt) + '/mo';
+document.getElementById('her-loan-int-mo').textContent = usd(D.janetteLoan * RATE);
+document.getElementById('him-loan-int-mo').textContent = usd(D.partnerLoan * RATE);
+document.getElementById('her-loan-payoff').textContent = herPayoffMo < 999
+  ? monthLabel(addMonths(now, herPayoffMo)) : '—';
+document.getElementById('him-loan-payoff').textContent = himPayoffMo < 999
+  ? monthLabel(addMonths(now, himPayoffMo)) : '—';
+document.getElementById('her-loan-pct').textContent = pct(herPaid, herOriginal) + '% paid';
+document.getElementById('him-loan-pct').textContent = pct(himPaid, himOriginal) + '% paid';
+
+// ── SAVINGS BUCKETS ───────────────────────────────────────
+const buckets = [
+  {name:'Emergency Fund', saved:D.emergencyFundSaved, target:D.emergencyFundTarget, color:'var(--him)'},
+  {name:'Baby Fund', saved:D.babyFundSaved, target:D.babyFundTarget, color:'var(--her)'},
+  {name:'Move-Out Fund', saved:D.moveOutFundSaved, target:D.moveOutFundTarget, color:'var(--purple)'},
+  {name:'Hokkaido 2027 ⛷', saved:D.hokkaido, target:D.hokkaidoTarget, color:'var(--gold)'},
+  {name:'Holiday & Gifts', saved:D.holidayFund, target:D.holidayTarget, color:'var(--green)'},
+  {name:'General Travel', saved:D.travelFund, target:D.travelTarget, color:'var(--purple)'},
+];
+
+document.getElementById('savings-grid').innerHTML = buckets.map(b=>{
+  const p = pct(b.saved, b.target);
+  return `<div class="prog-item">
+    <div class="prog-top">
+      <div class="prog-name">${b.name}</div>
+      <div class="prog-pct" style="color:${b.color}">${p}%</div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${b.color}"></div></div>
+    <div class="prog-meta">
+      <span style="color:${b.color};font-weight:600">${usd(b.saved)} saved</span>
+      <span>Goal: ${usd(b.target)}</span>
+    </div>
+  </div>`;
+}).join('');
+
+// ── INCOME ────────────────────────────────────────────────
+const combined = D.janetteIncome + D.partnerIncome;
+const herPctInc = Math.round(D.janetteIncome / combined * 100);
+const himPctInc = 100 - herPctInc;
+document.getElementById('inc-her').textContent = usd(D.janetteIncome);
+document.getElementById('inc-him').textContent = usd(D.partnerIncome);
+document.getElementById('inc-combined').textContent = usd(combined);
+document.getElementById('inc-her-sub').textContent = `${herPctInc}% of household · ${usd(D.janetteIncome*12)}/yr`;
+document.getElementById('inc-him-sub').textContent = `${himPctInc}% of household · ${usd(D.partnerIncome*12)}/yr`;
+document.getElementById('split-her').style.width = herPctInc + '%';
+document.getElementById('split-her-lbl').textContent = `Janette ${herPctInc}%`;
+document.getElementById('split-him-lbl').textContent = `Partner ${himPctInc}%`;
+
+// ── NOMAD COUNTDOWN ───────────────────────────────────────
+const nomadDate = new Date('2027-06-01');
+const daysToNomad = daysBetween(now, nomadDate);
+document.getElementById('nomad-days').textContent = daysToNomad > 0 ? daysToNomad : 'NOW';
+document.getElementById('nomad-desc').textContent = D.nomadItinerary + ` · Budget ${usd(D.nomadBudgetMonthly)}/mo · Return to ${D.returnLocation}`;
+document.getElementById('nomad-sub').textContent = `${D.nomadStart} departure target`;
+
+// ── MILESTONES ────────────────────────────────────────────
+const milestones = [
+  {icon:'💳', title:'CC Debt Eliminated', date:'April 2026', status:'done', desc:'$44,920 cleared'},
+  {icon:'📈', title:'2025 Roth Maxed', date:'April 15, 2026', status:'done', desc:'$7K — VTSAX + VXUS'},
+  {icon:'🎓', title:'Columbia MS Complete', date:D.columbiaGrad, status:'active', desc:'Capstone Summer 2026'},
+  {icon:'💼', title:'Partner Starts Job', date:D.partnerJobStart, status:'active', desc:'$120K · 401k available'},
+  {icon:'🏥', title:'Health Insurance', date:D.healthInsuranceDate, status:'future', desc:"On partner's plan"},
+  {icon:'🎿', title:'Hokkaido Ski Trip', date:'January 2027', status:'future', desc:'Rusutsu resort'},
+  {icon:'✈️', title:'Nomad Year Begins', date:D.nomadStart, status:'future', desc:D.nomadItinerary.split('·')[0]},
+  {icon:'🏠', title:'18 Battery Place', date:D.returnDate, status:'future', desc:`${usd(D.returnRent)}/mo rent`},
+];
+
+document.getElementById('milestone-list').innerHTML = milestones.map(m=>`
+  <div class="milestone ${m.status}">
+    <div class="m-icon">${m.icon}</div>
+    <div class="m-title">${m.title}</div>
+    <div class="m-date ${m.status}">${m.date}</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${m.desc}</div>
+    <span class="m-badge ${m.status==='done'?'mb-done':m.status==='active'?'mb-active':'mb-future'}">${m.status==='done'?'Complete':m.status==='active'?'In progress':'Upcoming'}</span>
+  </div>`).join('');
+
+// ── DASHBOARD LINKS ───────────────────────────────────────
+const dashboards = [
+  {icon:'💰', title:'Personal Budget', desc:'Janette personal expenses, Roth decision, missing categories, annual totals', file:'personal.html', accent:'var(--her)'},
+  {icon:'👫', title:'Couples Dashboard', desc:'Shared goals, debt tracker, equity balance, fair split calculator, phase plan', file:'couples.html', accent:'var(--him)'},
+  {icon:'📂', title:'Budget Categories', desc:'Every expense sorted into personal/joint/HYSA with 42 gray area rules', file:'categories.html', accent:'var(--gold)'},
+  {icon:'✈️', title:'Nomad Planner', desc:'Jan vs Jun 2027 vs no nomad — debt and net worth charts', file:'nomad.html', accent:'var(--purple)'},
+  {icon:'⚖️', title:'Personal vs Debt', desc:'Slider-based scenario explorer — personal spending vs payoff speed', file:'debt.html', accent:'var(--green)'},
+  {icon:'📊', title:'Scenario Compare', desc:'Side-by-side financial scenario comparison and projections', file:'scenarios.html', accent:'var(--her)'},
+];
+
+document.getElementById('dashboard-grid').innerHTML = dashboards.map(d=>`
+  <a class="dash-link" href="${d.file}" style="--accent:${d.accent}">
+    <div class="dash-icon">${d.icon}</div>
+    <div class="dash-title">${d.title}</div>
+    <div class="dash-desc">${d.desc}</div>
+    <div class="dash-updated">Updated: ${D.lastUpdated}</div>
+    <div class="dash-arrow">→</div>
+  </a>`).join('');
+</script>
+</body>
+</html>
